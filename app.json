@@ -1,0 +1,57 @@
+{
+	"id": "nl.philips.hue",
+	"version": "0.9",
+	"name": {
+		"en": "Philips Hue"
+	},
+	"description": {
+		"en": "Philips Hue app for Homey"
+	},
+	"author": {
+		"name": "Emile Nijssen",
+		"website": "http://www.emilenijssen.nl"
+	},
+	"images": {
+		"large": "assets/large.jpg",
+		"small": "assets/small.jpg"
+	},
+	"drivers": [
+		{
+			"id": "bulb",
+			"name": {
+				"en": "Philips Hue Bulb"
+			},
+			"category": "light",
+			"images": {
+				"large": "assets/large.jpg",
+				"small": "assets/small.jpg"
+			}
+			"capabilities": [ "onoff", "brightness", "hue", "temperature" ],
+			"pair": [
+				{
+					"id": "press_button",
+					"navigation": {
+						"next": "button_pressed"
+					}
+				},
+				{
+					"id": "button_pressed"
+				},
+				{
+					"id": "list_bulbs",
+					"template": "list_devices",
+					"navigation": {
+						"next": "add_bulbs"
+					}
+				},
+				{
+					"id": "add_bulbs",
+					"template": "add_devices"
+				}
+			]
+		}
+	],
+	"dependencies": {
+		"node-hue-api": "*"
+	}
+}
