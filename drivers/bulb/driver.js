@@ -10,13 +10,13 @@ var self = {
 	bulbs: {},
 		
 	init: function( callback ){
-		self.philips.hue = Homey.module("node-hue-api");
+		self.philips.hue = require("node-hue-api");
 		self.refresh( callback );
 	},
 	
 	refresh: function( callback ) {
 	
-		var api_key = Homey.manager('settings').get('api_key');
+		var api_key = Homey.settings.api_key;
 
 		// find the bridge
 		self.philips.hue
@@ -230,29 +230,31 @@ var self = {
 	},
 	
 	pair: {
-		start: function( callback, emit, data ){
+		press_button: function( callback, emit, data ){
 						
 			Homey.log('Hue bridge pairing has started');
 			
-		},
-		button_pressed: function( callback, emit, data ) {
+			function tryRegisterUser(){
 			
-			self.philips.api.registerUser(self.philips.bridge.ipaddress, null, 'Homey')
-			    .then(function( access_token ){
-				    Homey.log('Pair button pressed', access_token);
-					Homey.manager('settings').set('api_key', access_token);
-					self.refresh();
-				    callback(true);
-			    })
-			    .fail(function( error ){
-				    callback(false);
-				    Homey.error(error.message);
-			    })
-			    .done();
+				self.philips.api.registerUser(self.philips.bridge.ipaddress, null, 'Homey')
+				    .then(function( access_token ){
+					    Homey.log('Pair button pressed', access_token);
+						Homey.settings.api_key = access_token;
+						self.refresh();
+					    emit('button_pressed');
+				    })
+				    .fail(function( error ){
+					    setTimeout(tryRegisterUser, 250);
+				    })
+				    .done();
+				
+			}
+			
+			tryRegisterUser();
 			
 		},
 		list_devices: function( callback, emit, data ) {
-			
+						
 			// TODO
 			var devices = Object
 				.keys(self.bulbs)
@@ -264,7 +266,7 @@ var self = {
 						name: self.bulbs[bulb_id].name
 					};
 				});
-										
+			
 			callback( devices );
 			
 		},
