@@ -19,14 +19,15 @@
 		{
 			"id": "bulb",
 			"name": {
-				"en": "Philips Hue Bulb"
+				"en": "Philips Hue Bulb",
+				"en": "Philips Hue Lamp"
 			},
-			"category": "light",
+			"class": "light",
+			"capabilities": [ "onoff", "brightness", "hue", "saturation", "temperature" ],
 			"images": {
 				"large": "assets/large.jpg",
 				"small": "assets/small.jpg"
 			},
-			"capabilities": [ "onoff", "brightness", "hue", "temperature" ],
 			"pair": [
 				{
 					"id": "press_button"

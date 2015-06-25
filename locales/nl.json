@@ -1,1 +1,8 @@
-{}
+{
+	"pair": {
+		"press_button": {
+			"title": "Druk op de knop",
+			"description": "Druk op de knop van je Philips Hue bridge"
+		}
+	}
+}

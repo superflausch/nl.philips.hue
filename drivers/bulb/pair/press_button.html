@@ -1,12 +1,12 @@
-<p>Click next when you have pressed the button</p>
+<p data-i18n="pair.press_button.description"></p>
 
 <center>
 	<img src="pair-bridge.png" />
 </center>
 
 <script type="text/javascript">
-Homey.setTitle('Press the button on your Philips Hue bridge');
-	
+Homey.setTitle( __('pair.press_button.title') );
+
 Homey.emit('press_button');
 
 Homey.on('button_pressed', function(){
