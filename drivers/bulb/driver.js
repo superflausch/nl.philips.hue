@@ -11,7 +11,8 @@ var self = {
 		
 	init: function( callback ){
 		self.philips.hue = require("node-hue-api");
-		self.refresh( callback );
+		self.refresh();
+		callback();
 	},
 	
 	refresh: function( callback ) {
@@ -35,7 +36,7 @@ var self = {
 				self.philips.bridge = bridge;
 				
 				var username = api_key || '';
-	
+				
 				self.philips.api = new self.philips.hue.HueApi(self.philips.bridge.ipaddress, username);
 				
 				self.philips.api
@@ -135,98 +136,111 @@ var self = {
 		
 	},
 	
-	state: {
-		get: function( device, callback ) {
-			var bulb = self.getBulb( device.id );
-			if( bulb instanceof Error ) return callback( bulb );
-			
-			callback( bulb.state );
-		},
-		set: function( device, state, callback ) {
-			if( typeof state.onoff 			!= 'undefined' ) self.onoff.set( device, state.onoff, function(){} );
-			if( typeof state.brightness 	!= 'undefined' ) self.brightness.set( device, state.brightness, function(){} );
-			if( typeof state.hue 			!= 'undefined' ) self.hue.set( device, state.hue, function(){} );
-			if( typeof state.temperature 	!= 'undefined' ) self.temperature.set( device, state.temperature, function(){} );
-			
-			var bulb = self.getBulb( device.id );
-			if( bulb instanceof Error ) return callback( bulb );
-			
-			callback( bulb.state );
-		}
+	renamed: function( name, callback ) {
+		console.log('renamed', name, callback)
 	},
 	
-	onoff: {
-		get: function( device, callback ){
-			var bulb = self.getBulb( device.id );
-			if( bulb instanceof Error ) return callback( bulb );
-			
-			callback( bulb.state.onoff );
-		},
-		set: function( device, onoff, callback ){
-			var bulb = self.getBulb( device.id );
-			if( bulb instanceof Error ) return callback( bulb );
-			
-			bulb.state.onoff = onoff;
-			self.update( device.id );
-			
-			callback( bulb.state.onoff );
-		}
+	deleted: function( name, callback ) {
+		console.log('deleted', callback)
 	},
 	
-	brightness: {
-		get: function( device, callback ){
-			var bulb = self.getBulb( device.id );
-			if( bulb instanceof Error ) return callback( bulb );
-			
-			callback( bulb.state.brightness );
-		},
-		set: function( device, brightness, callback ){
-			var bulb = self.getBulb( device.id );
-			if( bulb instanceof Error ) return callback( bulb );
-			
-			bulb.state.brightness = brightness;
-			self.update( device.id );
-			
-			callback( bulb.state.brightness );
-		}
-	},
+	capabilities: {
 	
-	hue: {
-		get: function( device, callback ){
-			var bulb = self.getBulb( device.id );
-			if( bulb instanceof Error ) return callback( bulb );
-						
-			callback( bulb.state.hue );
+		state: {
+			get: function( device, callback ) {
+				var bulb = self.getBulb( device.id );
+				if( bulb instanceof Error ) return callback( bulb );
+								
+				callback( bulb.state );
+			},
+			set: function( device, state, callback ) {
+								
+				if( typeof state.onoff 			!= 'undefined' ) self.capabilities.onoff.set( device, state.onoff, function(){} );
+				if( typeof state.brightness 	!= 'undefined' ) self.capabilities.brightness.set( device, state.brightness, function(){} );
+				if( typeof state.hue 			!= 'undefined' ) self.capabilities.hue.set( device, state.hue, function(){} );
+				if( typeof state.temperature 	!= 'undefined' ) self.capabilities.temperature.set( device, state.temperature, function(){} );
+				
+				var bulb = self.getBulb( device.id );
+				if( bulb instanceof Error ) return callback( bulb );
+				
+				callback( bulb.state );
+			}
 		},
-		set: function( device, hue, callback ) {			
-			var bulb = self.getBulb( device.id );
-			if( bulb instanceof Error ) return callback( bulb );
-						
-			bulb.state.hue = hue;
-			bulb.state.temperature = false;
-			self.update( device.id );
-			
-			callback( bulb.state.hue );
-		}
-	},
+		
+		onoff: {
+			get: function( device, callback ){
+				var bulb = self.getBulb( device.id );
+				if( bulb instanceof Error ) return callback( bulb );
+				
+				callback( bulb.state.onoff );
+			},
+			set: function( device, onoff, callback ){
+				var bulb = self.getBulb( device.id );
+				if( bulb instanceof Error ) return callback( bulb );
+								
+				bulb.state.onoff = onoff;
+				self.update( device.id );
+								
+				callback( bulb.state.onoff );
+			}
+		},
+		
+		brightness: {
+			get: function( device, callback ){
+				var bulb = self.getBulb( device.id );
+				if( bulb instanceof Error ) return callback( bulb );
+				
+				callback( bulb.state.brightness );
+			},
+			set: function( device, brightness, callback ){
+				var bulb = self.getBulb( device.id );
+				if( bulb instanceof Error ) return callback( bulb );
+				
+				bulb.state.brightness = brightness;
+				self.update( device.id );
+				
+				callback( bulb.state.brightness );
+			}
+		},
+		
+		hue: {
+			get: function( device, callback ){
+				var bulb = self.getBulb( device.id );
+				if( bulb instanceof Error ) return callback( bulb );
+							
+				callback( bulb.state.hue );
+			},
+			set: function( device, hue, callback ) {			
+				var bulb = self.getBulb( device.id );
+				if( bulb instanceof Error ) return callback( bulb );
+							
+				bulb.state.hue = hue;
+				bulb.state.temperature = false;
+				self.update( device.id );
+				
+				callback( bulb.state.hue );
+			}
+		},
+		
+		temperature: {
+			get: function( device, callback ) {
+				var bulb = self.getBulb( device.id );
+				if( bulb instanceof Error ) return callback( bulb );
+				
+				callback( bulb.state.temperature );
+			},
+			set: function( device, temperature, callback ) {
+				var bulb = self.getBulb( device.id );
+				if( bulb instanceof Error ) return callback( bulb );
 	
-	temperature: {
-		get: function( device, callback ) {
-			var bulb = self.getBulb( device.id );
-			if( bulb instanceof Error ) return callback( bulb );
-			
-			callback( bulb.state.temperature );
-		},
-		set: function( device, temperature, callback ) {
-			var bulb = self.getBulb( device.id );
-			if( bulb instanceof Error ) return callback( bulb );
-
-			bulb.state.hue = false;
-			bulb.state.temperature = temperature;
-			self.update( device.id );
-			
-			callback( bulb.state.temperature );
+				bulb.state.hue = false;
+				bulb.state.temperature = temperature;
+				self.update( device.id );
+				
+				callback( bulb.state.temperature );
+			}
 		}
+	
 	},
 	
 	pair: {
