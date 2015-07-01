@@ -9,7 +9,7 @@ var self = {
 	},
 	bulbs: {},
 		
-	init: function( callback ){
+	init: function( devices, callback ){		
 		self.philips.hue = require("node-hue-api");
 		self.refresh();
 		callback();
@@ -185,24 +185,6 @@ var self = {
 			}
 		},
 		
-		brightness: {
-			get: function( device, callback ){
-				var bulb = self.getBulb( device.id );
-				if( bulb instanceof Error ) return callback( bulb );
-				
-				callback( bulb.state.brightness );
-			},
-			set: function( device, brightness, callback ){
-				var bulb = self.getBulb( device.id );
-				if( bulb instanceof Error ) return callback( bulb );
-				
-				bulb.state.brightness = brightness;
-				self.update( device.id );
-				
-				callback( bulb.state.brightness );
-			}
-		},
-		
 		hue: {
 			get: function( device, callback ){
 				var bulb = self.getBulb( device.id );
@@ -219,6 +201,43 @@ var self = {
 				self.update( device.id );
 				
 				callback( bulb.state.hue );
+			}
+		},
+		
+		saturation: {
+			get: function( device, callback ){
+				var bulb = self.getBulb( device.id );
+				if( bulb instanceof Error ) return callback( bulb );
+							
+				callback( bulb.state.saturation );
+			},
+			set: function( device, saturation, callback ) {			
+				var bulb = self.getBulb( device.id );
+				if( bulb instanceof Error ) return callback( bulb );
+							
+				bulb.state.saturation = saturation;
+				bulb.state.temperature = false;
+				self.update( device.id );
+				
+				callback( bulb.state.saturation );
+			}
+		},
+		
+		brightness: {
+			get: function( device, callback ){
+				var bulb = self.getBulb( device.id );
+				if( bulb instanceof Error ) return callback( bulb );
+				
+				callback( bulb.state.brightness );
+			},
+			set: function( device, brightness, callback ){
+				var bulb = self.getBulb( device.id );
+				if( bulb instanceof Error ) return callback( bulb );
+				
+				bulb.state.brightness = brightness;
+				self.update( device.id );
+				
+				callback( bulb.state.brightness );
 			}
 		},
 		
