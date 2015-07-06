@@ -128,9 +128,11 @@ var self = {
 			self.philips.api.setLightState( id, state );
 			
 			// emit event to realtime listeners
-			Homey.manager('drivers').realtime('bulb', {
-				id: id
-			}, 'state', self.getBulb( id ).state);
+			[ 'onoff', 'hue', 'saturation', 'brightness', 'temperature' ].forEach(function(capability){
+				module.exports.realtime({
+					id: id
+				}, capability, self.getBulb( id ).state[capability]);				
+			});
 			
 		}, 150);
 		
@@ -145,27 +147,6 @@ var self = {
 	},
 	
 	capabilities: {
-	
-		state: {
-			get: function( device, callback ) {
-				var bulb = self.getBulb( device.id );
-				if( bulb instanceof Error ) return callback( bulb );
-								
-				callback( bulb.state );
-			},
-			set: function( device, state, callback ) {
-								
-				if( typeof state.onoff 			!= 'undefined' ) self.capabilities.onoff.set( device, state.onoff, function(){} );
-				if( typeof state.brightness 	!= 'undefined' ) self.capabilities.brightness.set( device, state.brightness, function(){} );
-				if( typeof state.hue 			!= 'undefined' ) self.capabilities.hue.set( device, state.hue, function(){} );
-				if( typeof state.temperature 	!= 'undefined' ) self.capabilities.temperature.set( device, state.temperature, function(){} );
-				
-				var bulb = self.getBulb( device.id );
-				if( bulb instanceof Error ) return callback( bulb );
-				
-				callback( bulb.state );
-			}
-		},
 		
 		onoff: {
 			get: function( device, callback ){
