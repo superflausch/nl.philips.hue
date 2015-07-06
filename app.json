@@ -12,8 +12,8 @@
 		"website": "http://www.emilenijssen.nl"
 	},
 	"images": {
-		"large": "assets/large.jpg",
-		"small": "assets/small.jpg"
+		"large": "assets/images/large.jpg",
+		"small": "assets/images/small.jpg"
 	},
 	"drivers": [
 		{
@@ -25,8 +25,8 @@
 			"class": "light",
 			"capabilities": [ "onoff", "brightness", "hue", "saturation", "temperature" ],
 			"images": {
-				"large": "assets/large.jpg",
-				"small": "assets/small.jpg"
+				"large": "assets/images/large.jpg",
+				"small": "assets/images/small.jpg"
 			},
 			"pair": [
 				{
