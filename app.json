@@ -1,6 +1,6 @@
 {
 	"id": "nl.philips.hue",
-	"version": "0.9",
+	"version": "0.9.0",
 	"name": {
 		"en": "Philips Hue"
 	},
@@ -20,7 +20,7 @@
 			"id": "bulb",
 			"name": {
 				"en": "Philips Hue Bulb",
-				"en": "Philips Hue Lamp"
+				"nl": "Philips Hue Lamp"
 			},
 			"class": "light",
 			"capabilities": [ "onoff", "brightness", "hue", "saturation", "temperature" ],
