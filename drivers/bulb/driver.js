@@ -11,14 +11,14 @@ var self = {
 	},
 	
 	refresh: function( callback ) {
-
+		
 		// find the bridge
 		node_hue_api
 			.nupnpSearch() // TODO: fallback to upnpSearch. Didn't work on my network tho
 			.then(function(found_bridges) {
 								
 				if( found_bridges.length < 1 ) {
-					Homey.error('no bridges found');
+					Homey.error('No bridges were found');
 					return callback( new Error("no bridges found") );
 				}
 				
