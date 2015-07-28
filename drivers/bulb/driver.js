@@ -232,7 +232,27 @@ var self = {
 	},
 	
 	renamed: function( device, name, callback ) {
-		console.log('renamed', device, name, callback)
+					
+		var bridge = self.getBridge( device.bridge_id );
+		if( bridge instanceof Error ) return callback( new Error("bridge is unavailable") );
+		
+		var bulb = self.getBulb( device.bridge_id, device.bulb_id );
+		if( bulb instanceof Error ) return callback(bulb);
+		
+		bridge.api.setLightName(bulb.id, name)
+		    .then(function(){
+			    Homey.log('renamed bulb ' + bulb.id + ' succesfully');
+			    if( typeof callback == 'function' ) {
+			    	callback( null )
+			    }
+		    })
+		    .fail(function( err ){
+			    Homey.error(err);
+			    if( typeof callback == 'function' ) {
+			    	callback( err )
+			    }
+		    })
+		    .done();
 	},
 	
 	deleted: function( device, callback ) {
