@@ -16,6 +16,22 @@
 		"large": "assets/images/large.jpg",
 		"small": "assets/images/small.jpg"
 	},
+	"category": "lights",
+	"contributors": {
+		"developers": [
+			{
+				"name": "Emile Nijssen",
+				"email": "emile@athom.nl"
+			}
+		],
+		"translators": [
+			{
+				"name": "Emile Nijssen",
+				"email": "emile@athom.nl",
+				"languages": [ "en" ]
+			}
+		]
+	},
 	"drivers": [
 		{
 			"id": "bulb",
@@ -26,8 +42,8 @@
 			"class": "light",
 			"capabilities": [ "onoff", "brightness", "hue", "saturation", "temperature" ],
 			"images": {
-				"large": "assets/images/large.jpg",
-				"small": "assets/images/small.jpg"
+				"large": "drivers/bulb/assets/images/large.jpg",
+				"small": "drivers/bulb/assets/images/small.jpg"
 			},
 			"pair": [
 				{
