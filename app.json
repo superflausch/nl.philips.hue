@@ -40,7 +40,7 @@
 				"nl": "Philips Hue Lamp"
 			},
 			"class": "light",
-			"capabilities": [ "onoff", "brightness", "hue", "saturation", "temperature" ],
+			"capabilities": [ "onoff", "dim", "hue", "saturation", "temperature" ],
 			"images": {
 				"large": "drivers/bulb/assets/images/large.jpg",
 				"small": "drivers/bulb/assets/images/small.jpg"
