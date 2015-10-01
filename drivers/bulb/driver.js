@@ -4,6 +4,9 @@ var node_hue_api = require("node-hue-api");
 var bridges = {};
 var pairing_bridge_id;
 
+var oldHue;
+var oldTemperature;
+
 var self = {
 		
 	init: function( devices, callback ){		
@@ -87,15 +90,16 @@ var self = {
 												
 					var num_lights_paired = 0;
 					result.lights.forEach(function(light){
-												
+																								
 						var bulb = bridge.bulbs[ light.uniqueid ] = {
 							id		: light.id,
 							name	: light.name,
+							modelid	: light.modelid,
 							state	: {
 								on:				false,
 								hue:			false,
 								saturation: 	1.0,
-								brightness:		1.0,
+								dim:			1.0,
 								temperature: 	0.5
 							}
 						};
@@ -106,7 +110,7 @@ var self = {
 							.lightStatus(light.id)
 						    .then(function(status){				
 								bulb.state.onoff 			= status.state.on;
-								bulb.state.brightness 		= (status.state.bri+1) / 255;
+								bulb.state.dim		 		= (status.state.bri+1) / 255;
 								
 								if( status.state.colormode == 'hs' ) {
 									bulb.state.hue 			= status.state.hue / 65535;										
@@ -196,13 +200,13 @@ var self = {
 		if( bulb.state.temperature ) {				
 			state.white(
 				153 + bulb.state.temperature * 400,
-				bulb.state.brightness * 100
+				bulb.state.dim * 100
 			)
 		} else {
 			state.hsl(
 				Math.floor( bulb.state.hue * 360 ),
 				Math.floor( bulb.state.saturation * 100 ),
-				Math.floor( bulb.state.brightness * 100 )
+				Math.floor( bulb.state.dim * 100 )
 			);
 		}
 				
@@ -220,7 +224,7 @@ var self = {
 			// not really clean, should actually check what changed
 			// but yeah, we're building an awesome product with not so many people
 			// what do you expect :-)
-			[ 'onoff', 'hue', 'saturation', 'brightness', 'temperature' ].forEach(function(capability){
+			[ 'onoff', 'hue', 'saturation', 'dim', 'temperature' ].forEach(function(capability){
 				module.exports.realtime({
 					id: generateDeviceID( bridge_id, bulb_id )
 				}, capability, bulb.state[capability]);				
@@ -325,22 +329,22 @@ var self = {
 			}
 		},
 		
-		brightness: {
+		dim: {
 			get: function( device, callback ){
 				var bulb = self.getBulb( device.bridge_id, device.bulb_id );
 				if( bulb instanceof Error ) return callback( bulb );
 				
-				callback( bulb.state.brightness );
+				callback( bulb.state.dim );
 			},
-			set: function( device, brightness, callback ){
+			set: function( device, dim, callback ){
 				var bulb = self.getBulb( device.bridge_id, device.bulb_id );
 				if( bulb instanceof Error ) return callback( bulb );
 				
-				bulb.state.brightness = brightness;
+				bulb.state.dim = dim;
 				
 				self.update( device.bridge_id, device.bulb_id, function( result ){
 					if( result instanceof Error ) return callback(result);
-					callback( bulb.state.brightness );					
+					callback( bulb.state.dim );					
 				});
 			}
 		},
@@ -421,13 +425,15 @@ var self = {
 			var devices = Object
 				.keys(bridge.bulbs)
 				.map(function(bulb_id){
+					var bulb = bridge.bulbs[bulb_id];
 					return {
 						data: {
 							id			: generateDeviceID( pairing_bridge_id, bulb_id ),
 							bulb_id		: bulb_id,
 							bridge_id	: pairing_bridge_id
 						},
-						name: bridge.bulbs[bulb_id].name
+						icon: '/icons/' + bulb.modelid + '.svg',
+						name: bulb.name
 					};
 				});
 			

@@ -36,8 +36,8 @@
 		{
 			"id": "bulb",
 			"name": {
-				"en": "Philips Hue Bulb",
-				"nl": "Philips Hue Lamp"
+				"en": "Philips Hue",
+				"nl": "Philips Hue"
 			},
 			"class": "light",
 			"capabilities": [ "onoff", "dim", "hue", "saturation", "temperature" ],
