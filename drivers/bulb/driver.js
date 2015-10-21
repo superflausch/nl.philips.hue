@@ -1,15 +1,13 @@
 "use strict";
 
 var node_hue_api = require("node-hue-api");
+
 var bridges = {};
 var pairing_bridge_id;
 
-var oldHue;
-var oldTemperature;
-
 var self = {
 		
-	init: function( devices, callback ){		
+	init: function( devices, callback ){
 		self.refresh(callback);
 	},
 	
@@ -96,11 +94,11 @@ var self = {
 							name	: light.name,
 							modelid	: light.modelid,
 							state	: {
-								on:				false,
-								hue:			false,
-								saturation: 	1.0,
-								dim:			1.0,
-								temperature: 	0.5
+								on					: false,
+								dim					: 1.0,
+								light_hue			: false,
+								light_saturation	: 1.0,
+								light_temperature	: 0.5
 							}
 						};
 						
@@ -113,11 +111,11 @@ var self = {
 								bulb.state.dim		 		= (status.state.bri+1) / 255;
 								
 								if( status.state.colormode == 'hs' ) {
-									bulb.state.hue 			= status.state.hue / 65535;										
-									bulb.state.temperature 	= false;
+									bulb.state.light_hue 			= status.state.light_hue / 65535;										
+									bulb.state.light_temperature 	= false;
 								} else if( status.state.colormode == 'ct' ) {
-									bulb.state.temperature 	= (status.state.ct-154)/(500-154);
-									bulb.state.hue 			= false;
+									bulb.state.light_temperature 	= (status.state.ct-154)/(500-154);
+									bulb.state.light_hue 			= false;
 								}
 								
 								// check if we're done
@@ -197,15 +195,15 @@ var self = {
 			state.off();
 		}
 					
-		if( bulb.state.temperature ) {				
+		if( bulb.state.light_temperature ) {				
 			state.white(
-				153 + bulb.state.temperature * 400,
+				153 + bulb.state.light_temperature * 400,
 				bulb.state.dim * 100
 			)
 		} else {
 			state.hsl(
-				Math.floor( bulb.state.hue * 360 ),
-				Math.floor( bulb.state.saturation * 100 ),
+				Math.floor( bulb.state.light_hue * 360 ),
+				Math.floor( bulb.state.light_saturation * 100 ),
 				Math.floor( bulb.state.dim * 100 )
 			);
 		}
@@ -224,7 +222,7 @@ var self = {
 			// not really clean, should actually check what changed
 			// but yeah, we're building an awesome product with not so many people
 			// what do you expect :-)
-			[ 'onoff', 'hue', 'saturation', 'dim', 'temperature' ].forEach(function(capability){
+			[ 'onoff', 'dim', 'light_hue', 'light_saturation', 'light_temperature' ].forEach(function(capability){
 				module.exports.realtime({
 					id: generateDeviceID( bridge_id, bulb_id )
 				}, capability, bulb.state[capability]);				
@@ -270,7 +268,7 @@ var self = {
 				var bulb = self.getBulb( device.bridge_id, device.bulb_id );
 				if( bulb instanceof Error ) return callback( bulb );
 				
-				callback( bulb.state.onoff );
+				callback( null, bulb.state.onoff );
 			},
 			set: function( device, onoff, callback ){
 				var bulb = self.getBulb( device.bridge_id, device.bulb_id );
@@ -280,50 +278,50 @@ var self = {
 				
 				self.update( device.bridge_id, device.bulb_id, function( result ){
 					if( result instanceof Error ) return callback(result);
-					callback( bulb.state.onoff );					
+					callback( null, bulb.state.onoff );					
 				});
 								
 			}
 		},
 		
-		hue: {
+		light_hue: {
 			get: function( device, callback ){
 				var bulb = self.getBulb( device.bridge_id, device.bulb_id );
 				if( bulb instanceof Error ) return callback( bulb );
 							
-				callback( bulb.state.hue );
+				callback( null, bulb.state.light_hue );
 			},
-			set: function( device, hue, callback ) {
+			set: function( device, light_hue, callback ) {
 				var bulb = self.getBulb( device.bridge_id, device.bulb_id );
 				if( bulb instanceof Error ) return callback( bulb );
 							
-				bulb.state.hue = hue;
-				bulb.state.temperature = false;
+				bulb.state.light_hue = light_hue;
+				bulb.state.light_temperature = false;
 				
 				self.update( device.bridge_id, device.bulb_id, function( result ){
 					if( result instanceof Error ) return callback(result);
-					callback( bulb.state.hue );					
+					callback( null, bulb.state.light_hue );					
 				});
 			}
 		},
 		
-		saturation: {
+		light_saturation: {
 			get: function( device, callback ){
 				var bulb = self.getBulb( device.bridge_id, device.bulb_id );
 				if( bulb instanceof Error ) return callback( bulb );
 							
-				callback( bulb.state.saturation );
+				callback( null, bulb.state.light_saturation );
 			},
-			set: function( device, saturation, callback ) {			
+			set: function( device, light_saturation, callback ) {			
 				var bulb = self.getBulb( device.bridge_id, device.bulb_id );
 				if( bulb instanceof Error ) return callback( bulb );
 							
-				bulb.state.saturation = saturation;
-				bulb.state.temperature = false;
+				bulb.state.light_saturation = light_saturation;
+				bulb.state.light_temperature = false;
 				
 				self.update( device.bridge_id, device.bulb_id, function( result ){
 					if( result instanceof Error ) return callback(result);
-					callback( bulb.state.saturation );					
+					callback( null, bulb.state.light_saturation );					
 				});
 				
 			}
@@ -334,7 +332,7 @@ var self = {
 				var bulb = self.getBulb( device.bridge_id, device.bulb_id );
 				if( bulb instanceof Error ) return callback( bulb );
 				
-				callback( bulb.state.dim );
+				callback( null, bulb.state.dim );
 			},
 			set: function( device, dim, callback ){
 				var bulb = self.getBulb( device.bridge_id, device.bulb_id );
@@ -344,28 +342,28 @@ var self = {
 				
 				self.update( device.bridge_id, device.bulb_id, function( result ){
 					if( result instanceof Error ) return callback(result);
-					callback( bulb.state.dim );					
+					callback( null, bulb.state.dim );					
 				});
 			}
 		},
 		
-		temperature: {
+		light_temperature: {
 			get: function( device, callback ) {
 				var bulb = self.getBulb( device.bridge_id, device.bulb_id );
 				if( bulb instanceof Error ) return callback( bulb );
 				
-				callback( bulb.state.temperature );
+				callback( null, bulb.state.light_temperature );
 			},
-			set: function( device, temperature, callback ) {
+			set: function( device, light_temperature, callback ) {
 				var bulb = self.getBulb( device.bridge_id, device.bulb_id );
 				if( bulb instanceof Error ) return callback( bulb );
 	
-				bulb.state.hue = false;
-				bulb.state.temperature = temperature;
+				bulb.state.light_hue = false;
+				bulb.state.light_temperature = light_temperature;
 				
 				self.update( device.bridge_id, device.bulb_id, function( result ){
 					if( result instanceof Error ) return callback(result);
-					callback( bulb.state.temperature );					
+					callback( null, bulb.state.light_temperature );					
 				});
 			}
 		}
