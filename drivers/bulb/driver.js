@@ -370,8 +370,8 @@ var self = {
 	
 	},
 	
-	pair: {
-		press_button: function( callback, emit, data ){
+	pair: function( socket ) {
+		socket.on('press_button', function( data, callback ){
 						
 			Homey.log('Hue bridge pairing has started');
 			
@@ -399,7 +399,7 @@ var self = {
 						
 						// refresh this bridge
 						self.refreshBridge( bridge_id, function(){
-						    emit('button_pressed');							
+							socket.emit('button_pressed');							
 						});
 				    })
 				    .fail(function( error ){
@@ -414,8 +414,9 @@ var self = {
 			}
 			
 			
-		},
-		list_devices: function( callback, emit, data ) {
+		});
+		
+		socket.on('list_devices', function( data, callback ) {
 			
 			var bridge = self.getBridge( pairing_bridge_id );
 			if( bridge instanceof Error ) return callback( new Error("bridge suddenly unavailable") );
@@ -435,14 +436,12 @@ var self = {
 					};
 				});
 			
-			callback( devices );
+			callback( null, devices );
 
 			pairing_bridge_id = undefined;
 			
-		},
-		pair: function( callback, emit, data ) {
-			// done pairing
-		}
+		});
+		
 	}
 	
 }
