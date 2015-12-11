@@ -2,12 +2,14 @@
 
 var node_hue_api = require("node-hue-api");
 
+var bridges_in_settings;
 var bridges = {};
 var pairing_bridge_id;
 
 var self = {
 		
-	init: function( devices, callback ){
+	init: function( devices, callback ){		
+		bridges_in_settings = Homey.manager('settings').get('bridges');
 		self.refresh(callback);
 	},
 	
@@ -36,17 +38,18 @@ var self = {
 					};
 					
 					// get the token, or create the settings object
-					if( typeof Homey.settings.bridges == 'undefined' ) {
-						Homey.settings.bridges = {};
+					if( typeof bridges_in_settings == 'undefined' ) {
+						Homey.manager('settings').set('bridges', {});
 					}
 					
-					if( typeof Homey.settings.bridges[ bridge.id ] == 'undefined' ) {
-						Homey.settings.bridges[ bridge.id ] = {
+					if( typeof bridges_in_settings[ bridge.id ] == 'undefined' ) {
+						bridges_in_settings[ bridge.id ] = {
 							token: false
 						};
+						Homey.manager('settings').set('bridges', bridges_in_settings);
 					}
 					
-					var token = Homey.settings.bridges[ bridge.id ].token;
+					var token = bridges_in_settings[ bridge.id ].token;
 					
 					if( token !== false ) {
 						bridges[ bridge.id ].api = new node_hue_api.HueApi(bridge.ipaddress, token);
@@ -389,7 +392,8 @@ var self = {
 					    Homey.log('Pair button pressed', access_token);
 					    
 					    // save the token
-					    Homey.settings.bridges[ bridge_id ].token = access_token;
+					    bridges_in_settings[ bridge_id ].token = access_token;
+					    Homey.manager('settings').set('bridges', bridges_in_settings);
 					    
 					    // make sure we're pairing only 1 bridge
 						pairing_bridge_id = bridge_id;
