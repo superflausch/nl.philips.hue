@@ -11,7 +11,6 @@ self.getBridge 	= getBridge;
 self.getLight 	= getLight;
 
 function init(){
-	Homey.log('app inited');
 	refreshBridges();
 }
 
@@ -126,7 +125,10 @@ function refreshBridge( bridge_id, callback ) {
 							light_temperature	: 0.5
 						},
 						setLightState: function( state ){
-							bridge.api.setLightState( light.id, state )
+							return bridge.api.setLightState( light.id, state )
+						},
+						setLightName: function( light_id, name ) {
+							return bridge.api.setLightName( light_id, name );
 						}
 					};
 					

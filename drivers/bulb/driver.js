@@ -2,53 +2,29 @@
 
 var node_hue_api = require("node-hue-api");
 
-var lights = {};
-
 var self = {
 		
-	init: function( devices_data, callback ){
-		
-		// get devices state
-		devices_data.forEach(function(device_data){
-			
-			var bridge = Homey.app.getBridge( devices_data.bridge_id );
-			if( bridge instanceof Error ) return Homey.error("bridge not found (yet) for bulb", devices_data.id);
-			
-			lights[ devices_data.id ] = bridge.lights[ devices_data.id ];
-			
-		})
-		
-		callback();
-		
+	init: function( devices_data, callback ){		
+		callback();		
 	},
 	
 	renamed: function( device, name, callback ) {
 		
-		console.log('RENAMED TODO')
-		
-		return;
-		/*
-		var bridge = self.getBridge( device.bridge_id );
-		if( bridge instanceof Error ) return callback( new Error("bridge is unavailable") );
+		callback = callback || function(){}
 		
 		var light = getLight( device.id );
-		if( bulb instanceof Error ) return callback(bulb);
+		if( light instanceof Error ) return callback(light);
 		
-		bridge.api.setLightName(light.id, name)
+		light.setLightName( light.id, name )
 		    .then(function(){
-			    Homey.log('renamed bulb ' + light.id + ' succesfully');
-			    if( typeof callback == 'function' ) {
-			    	callback( null )
-			    }
+			    Homey.log('renamed light ' + device.id + ' succesfully');
+		    	callback( null )
 		    })
 		    .fail(function( err ){
 			    Homey.error(err);
-			    if( typeof callback == 'function' ) {
-			    	callback( err )
-			    }
+		    	callback( err )
 		    })
 		    .done();
-		*/
 	},
 	
 	deleted: function( device, callback ) {
@@ -174,7 +150,7 @@ var self = {
 module.exports = self;
 
 function filterFn( devices ){
-	console.log('filterFn', devices)
+	// TODO: filter devices by capabilities
 	return devices;
 }
 	
