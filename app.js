@@ -1,6 +1,11 @@
 "use strict";
 
-var node_hue_api = require("node-hue-api");
+var extend 			= require('util')._extend;
+
+var node_hue_api 	= require("node-hue-api");
+
+var modelIcons = [ 'LCT001', 'LLC020', 'LST001', 'LWB004', 'GU10' ];
+
 var bridges = {};
 var lights = {};
 
@@ -9,6 +14,8 @@ self.init 		= init;
 self.pair 		= pair;
 self.getBridge 	= getBridge;
 self.getLight 	= getLight;
+self.ctToFloat	= ctToFloat;
+self.floatToCt	= floatToCt;
 
 function init(){
 	refreshBridges();
@@ -112,21 +119,17 @@ function refreshBridge( bridge_id, callback ) {
 				result.lights.forEach(function(light){
 																							
 					var bulb = bridge.lights[ light.uniqueid ] = lights[ light.uniqueid ] = {
-						uniqueid: light.uniqueid,
-						id		: light.id,
-						name	: light.name,
-						modelid	: light.modelid,
-						state	: {
-							on					: false,
-							dim					: 1.0,
-							light_hue			: false,
-							light_saturation	: 1.0,
-							light_temperature	: 0.5
+						uniqueid		: light.uniqueid,
+						id				: light.id,
+						name			: light.name,
+						modelid			: light.modelid,
+						state			: {},
+						hardwareState	: {},
+						setLightState	: function( state, callback ){
+							bulb.hardwareState = extend(bulb.hardwareState, bulb.state); 
+							return bridge.api.setLightState( light.id, state, callback)
 						},
-						setLightState: function( state ){
-							return bridge.api.setLightState( light.id, state )
-						},
-						setLightName: function( light_id, name ) {
+						setLightName	: function( light_id, name ) {
 							return bridge.api.setLightName( light_id, name );
 						}
 					};
@@ -135,17 +138,22 @@ function refreshBridge( bridge_id, callback ) {
 					bridge
 						.api
 						.lightStatus(light.id)
-					    .then(function(status){				
+					    .then(function(status){
+						    
 							bulb.state.onoff 			= status.state.on;
 							bulb.state.dim		 		= (status.state.bri+1) / 255;
 							
 							if( status.state.colormode == 'hs' ) {
-								bulb.state.light_hue 			= status.state.light_hue / 65535;										
+								bulb.state.light_hue 			= status.state.hue / 65535;										
 								bulb.state.light_temperature 	= false;
+								bulb.state.light_saturation		= (status.state.sat+1) / 255;
 							} else if( status.state.colormode == 'ct' ) {
-								bulb.state.light_temperature 	= (status.state.ct-154)/(500-154);
+								bulb.state.light_temperature 	= ctToFloat( status.state.ct );
 								bulb.state.light_hue 			= false;
+								bulb.state.light_saturation		= false;
 							}
+							
+							bulb.hardwareState = extend(bulb.hardwareState, bulb.state); 
 							
 							// check if we're done
 							num_lights_paired++;
@@ -256,12 +264,19 @@ function pair( socket ) {
 			.keys(bridge.lights)
 			.map(function(light_id){
 				var light = bridge.lights[light_id];
+				
+				if( modelIcons.indexOf(light.modelid) > -1 ) {
+					var iconPath = '/icons/' + light.modelid + '.svg';
+				} else {
+					var iconPath = '/icons/' + modelIcons[0] + '.svg';
+				}
+				
 				return {
 					data: {
 						id			: light.uniqueid,
 						bridge_id	: bridge.id
 					},
-					icon: '/icons/' + light.modelid + '.svg',
+					icon: iconPath,
 					name: light.name
 				};
 			});
@@ -276,4 +291,13 @@ function pair( socket ) {
 	    }
 	})
 	
+}
+
+// color-temperature to float & vice-versa
+function ctToFloat( ct ) {
+	return (ct-154)/(500-154)
+}
+
+function floatToCt( f ) {
+	return (f*(500-154))+154;
 }

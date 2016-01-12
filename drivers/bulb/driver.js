@@ -4,7 +4,7 @@ var node_hue_api = require("node-hue-api");
 
 var self = {
 		
-	init: function( devices_data, callback ){		
+	init: function( devices_data, callback ){
 		callback();		
 	},
 	
@@ -43,7 +43,7 @@ var self = {
 			set: function( device, onoff, callback ){
 				var light = getLight( device.id );
 				if( light instanceof Error ) return callback( light );
-								
+												
 				light.state.onoff = onoff;
 				
 				update( device.id, function( result ){
@@ -51,6 +51,26 @@ var self = {
 					callback( null, light.state.onoff );					
 				});
 								
+			}
+		},
+		
+		dim: {
+			get: function( device, callback ){
+				var light = getLight( device.id );
+				if( light instanceof Error ) return callback( light );
+				
+				callback( null, light.state.dim );
+			},
+			set: function( device, dim, callback ){
+				var light = getLight( device.id );
+				if( light instanceof Error ) return callback( light );
+				
+				light.state.dim = dim;
+				
+				update( device.id, function( result ){
+					if( result instanceof Error ) return callback(result);
+					callback( null, light.state.dim );					
+				});
 			}
 		},
 		
@@ -85,6 +105,8 @@ var self = {
 			set: function( device, light_saturation, callback ) {			
 				var light = getLight( device.id );
 				if( light instanceof Error ) return callback( light );
+				
+				console.log('light_saturation.set', light_saturation)
 							
 				light.state.light_saturation = light_saturation;
 				light.state.light_temperature = false;
@@ -94,26 +116,6 @@ var self = {
 					callback( null, light.state.light_saturation );					
 				});
 				
-			}
-		},
-		
-		dim: {
-			get: function( device, callback ){
-				var light = getLight( device.id );
-				if( light instanceof Error ) return callback( light );
-				
-				callback( null, light.state.dim );
-			},
-			set: function( device, dim, callback ){
-				var light = getLight( device.id );
-				if( light instanceof Error ) return callback( light );
-				
-				light.state.dim = dim;
-				
-				update( device.id, function( result ){
-					if( result instanceof Error ) return callback(result);
-					callback( null, light.state.dim );					
-				});
 			}
 		},
 		
@@ -159,45 +161,71 @@ function filterFn( devices ){
 */
 function update( light_id, callback ){
 	
+	callback = callback || function(){}
+	
 	var light = getLight( light_id );
 	if( light instanceof Error ) return callback(light);
 	
 	// create a new Philips State object from the bulb's state
 	var state = node_hue_api.lightState.create();
-				
-	if( light.state.onoff ) {
-		state.on();
-	} else {
-		state.off();
+	
+	var changedStates = [];
+			
+	// update: onoff
+	if( light.state.onoff != light.hardwareState.onoff ) {
+		changedStates.push('onoff')
+		if( light.state.onoff === true ) {
+			state.on();
+		} else {
+			state.off();
+		}
+	}
+	
+	// update: light_temperature && light_hue && light_saturation
+	if(
+		light.state.dim					!= light.hardwareState.dim					||
+		light.state.light_temperature 	!= light.hardwareState.light_temperature 	|| 
+		light.state.light_hue 			!= light.hardwareState.light_hue 			||
+		light.state.light_saturation 	!= light.hardwareState.light_saturation
+	) {
+		
+		if( light.state.dim					!= light.hardwareState.dim ) 				changedStates.push('dim');
+		if( light.state.light_temperature 	!= light.hardwareState.light_temperature ) 	changedStates.push('light_temperature');
+		if( light.state.light_hue 			!= light.hardwareState.light_hue ) 			changedStates.push('light_hue');
+		if( light.state.light_saturation 	!= light.hardwareState.light_saturation ) 	changedStates.push('light_saturation');
+		
+		if( light.state.light_temperature ) {				
+			state.white(
+				Homey.app.floatToCt(light.state.light_temperature),
+				light.state.dim * 100
+			)
+		} else {
+						
+			state.hsl(
+				Math.floor( light.state.light_hue * 360 ),
+				Math.floor( light.state.light_saturation * 100 ),
+				Math.floor( light.state.dim * 100 )
+			);
+		}
 	}
 				
-	if( light.state.light_temperature ) {				
-		state.white(
-			153 + light.state.light_temperature * 400,
-			light.state.dim * 100
-		)
-	} else {
-		state.hsl(
-			Math.floor( light.state.light_hue * 360 ),
-			Math.floor( light.state.light_saturation * 100 ),
-			Math.floor( light.state.dim * 100 )
-		);
-	}
+	if( changedStates.length < 1 ) return callback();
 			
 	// clear debounce
 	if( light.updateTimeout ) clearTimeout(light.updateTimeout);
 	
 	// debounce
 	light.updateTimeout = setTimeout(function(){
-		
+				
 		// find bulb id by uniqueid			
-		light.setLightState( state );
+		light.setLightState( state, function(err, result){
+			// TODO
+			//if( err ) return self.setUnavailable(  );
+			//self.setAvailable(  );
+		});
 		
 		// emit event to realtime listeners
-		// not really clean, should actually check what changed
-		// but yeah, we're building an awesome product with not so many people
-		// what do you expect :-)
-		[ 'onoff', 'dim', 'light_hue', 'light_saturation', 'light_temperature' ].forEach(function(capability){
+		changedStates.forEach(function(capability){
 			module.exports.realtime({
 				id: light.uniqueid
 			}, capability, light.state[capability]);				
