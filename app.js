@@ -233,7 +233,7 @@ function pair( socket ) {
 					    }
 					    				    
 					    // save the token
-						Homey.manager('settings').set('bridge_token_' + bridge.id, access_token );
+						Homey.manager('settings').set('bridge_token_' + paired_bridge_id, access_token );
 											
 						// refresh this bridge
 						addBridgeAndRefresh( bridge_id, bridge.ipaddress, function(){

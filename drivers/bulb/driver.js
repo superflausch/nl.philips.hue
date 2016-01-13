@@ -105,9 +105,7 @@ var self = {
 			set: function( device, light_saturation, callback ) {			
 				var light = getLight( device.id );
 				if( light instanceof Error ) return callback( light );
-				
-				console.log('light_saturation.set', light_saturation)
-							
+											
 				light.state.light_saturation = light_saturation;
 				light.state.light_temperature = false;
 				
