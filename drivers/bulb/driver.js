@@ -192,7 +192,7 @@ function update( light_id, callback ){
 		if( light.state.light_hue 			!= light.hardwareState.light_hue ) 			changedStates.push('light_hue');
 		if( light.state.light_saturation 	!= light.hardwareState.light_saturation ) 	changedStates.push('light_saturation');
 		
-		if( light.state.light_temperature ) {				
+		if( typeof light.state.light_temperature == 'number' ) {
 			state.white(
 				Homey.app.floatToCt(light.state.light_temperature),
 				light.state.dim * 100
