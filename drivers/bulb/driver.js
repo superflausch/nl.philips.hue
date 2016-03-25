@@ -28,7 +28,7 @@ var self = {
 	},
 	
 	deleted: function( device, callback ) {
-		console.log('deleted', device, callback)
+		console.log('deleted', device)
 	},
 	
 	capabilities: {

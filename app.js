@@ -4,10 +4,11 @@ var extend 			= require('util')._extend;
 
 var node_hue_api 	= require("node-hue-api");
 
-var modelIcons = [ 'LCT001', 'LLC020', 'LST001', 'LWB004', 'GU10' ];
+var pollTimeout 	= 30000;
+var modelIcons 		= [ 'LCT001', 'LLC020', 'LST001', 'LWB004', 'GU10' ];
 
-var bridges = {};
-var lights = {};
+var bridges 		= {};
+var lights 			= {};
 
 var self 		= module.exports;
 self.init 		= init;
@@ -27,8 +28,21 @@ self.typeCapabilityMap = {
 }
 
 function init(){
-	refreshBridges();
+	refreshBridges(function(err){
+		if( err ) return Homey.error(err);
+		setInterval(pollBridges, pollTimeout);
+	});
 }
+
+/*
+	Poll bridges for remote changes
+*/
+function pollBridges(){
+	for( var bridge_id in bridges ) {
+		refreshBridge( bridge_id );		
+	}
+}
+
 
 /*
 	Get a bridge by ID
@@ -150,17 +164,16 @@ function refreshBridge( bridge_id, callback ) {
 						.lightStatus(light.id)
 					    .then(function(status){
 
-							bulb.state.onoff 			= status.state.on;
-							bulb.state.dim		 		= (status.state.bri+1) / 255;
-
+							bulb.state.onoff 				= status.state.on;
+							bulb.state.dim		 			= (status.state.bri+1) / 255;
+							bulb.state.light_hue 			= status.state.hue / 65535;
+							bulb.state.light_saturation		= (status.state.sat+1) / 255;
+							bulb.state.light_temperature 	= ctToFloat( status.state.ct );
+								
 							if( status.state.colormode == 'hs' ) {
-								bulb.state.light_hue 			= status.state.hue / 65535;
-								bulb.state.light_temperature 	= false;
-								bulb.state.light_saturation		= (status.state.sat+1) / 255;
+								bulb.state.light_mode = 'color';
 							} else if( status.state.colormode == 'ct' ) {
-								bulb.state.light_temperature 	= ctToFloat( status.state.ct );
-								bulb.state.light_hue 			= false;
-								bulb.state.light_saturation		= false;
+								bulb.state.light_mode = 'temperature';
 							}
 
 							bulb.hardwareState = extend(bulb.hardwareState, bulb.state);
@@ -274,6 +287,12 @@ function pair( socket ) {
 			.keys(bridge.lights)
 			.map(function(light_id){
 				var light = bridge.lights[light_id];
+				
+				var capabilities = self.typeCapabilityMap[ light.type ].slice(0);
+				
+				if( capabilities.indexOf('light_hue') > -1 && capabilities.indexOf('light_temperature') > -1 ) {
+					//capabilities.push('light_mode'); // wait for homey update
+				}
 
 				var deviceObj = {
 					name	: light.name,
@@ -281,7 +300,7 @@ function pair( socket ) {
 						id			: light.uniqueid,
 						bridge_id	: bridge.id
 					},
-					capabilities: self.typeCapabilityMap[ light.type ]
+					capabilities: capabilities
 				};
 
 				if( modelIcons.indexOf(light.modelid) > -1 ) {
