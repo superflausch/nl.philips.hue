@@ -4,5 +4,6 @@
 			"title": "Press the button",
 			"description": "Press the button on your Philips Hue bridge"
 		}
-	}
+	},
+	"unreachable": "Unreachable"
 }

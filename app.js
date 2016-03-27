@@ -177,6 +177,18 @@ function refreshBridge( bridge_id, callback ) {
 							}
 
 							bulb.hardwareState = extend(bulb.hardwareState, bulb.state);
+							
+							// set available or unavailable						    							
+							var device_data = {
+								id			: bulb.uniqueid,
+								bridge_id	: bridge_id
+							}
+							
+							if( status.state.reachable ) {
+								Homey.manager('drivers').getDriver('bulb').setAvailable( device_data );
+							} else {
+								Homey.manager('drivers').getDriver('bulb').setUnavailable( device_data, __("unreachable") );
+							}
 
 							// check if we're done
 							num_lights_paired++;
