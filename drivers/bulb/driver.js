@@ -1,10 +1,30 @@
 "use strict";
 
-var node_hue_api = require("node-hue-api");
+var extend 				= require('util')._extend;
+var node_hue_api 		= require("node-hue-api");
+
+var pollInterval 		= 15000;
+var modelIcons 			= [ 'LCT001', 'LLC020', 'LST001', 'LWB004', 'GU10' ];
+var typeCapabilityMap 	= {
+	'On/Off light'				: [ 'onoff' ],
+	'Dimmable light'			: [ 'onoff', 'dim' ],
+	'Color Temperature Light'	: [ 'onoff', 'light_temperature' ],
+	'Color light'				: [ 'onoff', 'dim', 'light_hue', 'light_saturation' ],
+	'Extended color light'		: [ 'onoff', 'dim', 'light_hue', 'light_saturation', 'light_temperature' /*,light_mode*/ ],
+}
+
+var bridges 			= {};
+var lights 				= {};
 
 var self = {
 		
 	init: function( devices_data, callback ){
+		
+		refreshBridges(function(err){
+			if( err ) return Homey.error(err);
+			setInterval(pollBridges, pollInterval);
+		});
+		
 		callback();		
 	},
 	
@@ -140,18 +160,291 @@ var self = {
 	
 	},
 	
-	pair: Homey.app.pair.bind({
-		driver_id: 'bulb',
-		filterFn: filterFn
-	})
+	pair: function( socket ) {
+
+		var driver_id = this.driver_id;
+		var paired_bridge_id;
+		var retryTimeouts = {};
+	
+		socket.on('press_button', function( data, callback ){
+	
+			refreshBridges(function( err ){
+				if( err ) Homey.error(err.stack);
+	
+				Homey.log('Hue bridge pairing has started', bridges);
+	
+				for( var bridge_id in bridges ) {
+					tryRegisterUser( bridge_id );
+				}
+	
+				function tryRegisterUser( bridge_id ){
+					var bridge = bridges[bridge_id];
+	
+					new node_hue_api.HueApi()
+						.registerUser(bridge.ipaddress, null, 'Homey')
+					    .then(function( access_token ){
+						    Homey.log('Pair button pressed', access_token);
+	
+							paired_bridge_id = bridge_id;
+	
+						    // clear timeouts
+						    for( var retryTimeout in retryTimeouts ) {
+							    clearTimeout(retryTimeouts[ retryTimeout ]);
+						    }
+	
+						    // save the token
+							Homey.manager('settings').set('bridge_token_' + paired_bridge_id, access_token );
+	
+							// refresh this bridge
+							addBridgeAndRefresh( bridge_id, bridge.ipaddress, function(){
+								socket.emit('button_pressed');
+							});
+					    })
+					    .fail(function( error ){
+						    retryTimeouts[ bridge_id ] = setTimeout(function(){
+							    if( typeof pairing_bridge_id == 'undefined' ) {
+								    tryRegisterUser( bridge_id );
+							    }
+						    }, 250);
+					    })
+					    .done();
+	
+				}
+	
+			});
+	
+	
+		});
+	
+		socket.on('list_devices', function( data, callback ) {
+	
+			var bridge = bridges[ paired_bridge_id ];
+	
+			var devices = Object
+				.keys(bridge.lights)
+				.map(function(light_id){
+					var light = bridge.lights[light_id];
+					
+					var deviceObj = {
+						name	: light.name,
+						data 	: {
+							id			: light.uniqueid,
+							bridge_id	: bridge.id
+						},
+						capabilities: typeCapabilityMap[ light.type ]
+					};
+	
+					if( modelIcons.indexOf(light.modelid) > -1 ) {
+						deviceObj.icon = '/icons/' + light.modelid + '.svg';
+					} else {
+						deviceObj.icon = '/icons/' + modelIcons[0] + '.svg';
+					}
+	
+					return deviceObj;
+				});
+	
+			callback( null, devices );
+	
+		});
+	
+		socket.on('disconnect', function(){
+		    for( var retryTimeout in retryTimeouts ) {
+			    clearTimeout(retryTimeouts[ retryTimeout ]);
+		    }
+		})
+	
+	}
 	
 }
 
 module.exports = self;
 
-function filterFn( devices ){
-	// TODO: filter devices by capabilities
-	return devices;
+/*
+	Search for bridges on the network, and get their state
+*/
+function refreshBridges( callback ) {
+
+	callback = callback || function(){}
+
+	// find the bridge
+	node_hue_api
+		.nupnpSearch() // TODO: fallback to upnpSearch. Didn't work on my network tho
+		.then(function(found_bridges) {
+
+			if( found_bridges.length < 1 ) {
+				Homey.error('No bridges were found');
+				return callback( new Error("no bridges found") );
+			}
+
+			var num_refreshed_bridges = 0;
+			found_bridges.forEach(function(bridge){
+
+				addBridgeAndRefresh( bridge.id, bridge.ipaddress, function(){
+					num_refreshed_bridges++;
+					if( num_refreshed_bridges == found_bridges.length ) {
+						if( typeof callback == 'function' ) {
+							callback();
+						}
+					}
+				})
+
+				Homey.log('Found bridge! ID: ' + bridge.id + ', IP: ' + bridge.ipaddress);
+
+			});
+
+		})
+		.fail(function( err ){
+			if( typeof callback == 'function' ) {
+				callback( err );
+			}
+		})
+		.done();
+
+}
+
+function addBridgeAndRefresh( bridge_id, bridge_ipaddress, callback ){
+
+	callback = callback || function(){}
+
+	// add this bridge to the local bridges object
+	bridges[ bridge_id ] = {
+		ipaddress	: bridge_ipaddress,
+		api			: false,
+		lights		: {}
+	};
+
+	// initialize the API
+	var token = Homey.manager('settings').get('bridge_token_' + bridge_id );
+	if( token ) {
+		bridges[ bridge_id ].api = new node_hue_api.HueApi(bridge_ipaddress, token);
+	}
+
+	refreshBridge( bridge_id, callback );
+}
+
+/*
+	Get a bridge and refresh it's state
+*/
+function refreshBridge( bridge_id, callback ) {
+
+	callback = callback || function(){}
+
+	// get the bridge
+	var bridge = getBridge( bridge_id );
+	if( bridge instanceof Error ) return callback(bridge);
+
+	// if already paired, get lights
+	if( bridge.api !== false ) {
+		bridge
+			.api
+			.lights()
+			.then(function( result ) {
+				var num_lights_paired = 0;
+				result.lights.forEach(function(light){
+					
+					var firstTime = ( typeof bridge.lights[ light.uniqueid ] == 'undefined' );
+					if( firstTime ) {
+						var bulb = bridge.lights[ light.uniqueid ] = lights[ light.uniqueid ] = {
+							uniqueid		: light.uniqueid,
+							id				: light.id,
+							type			: light.type,
+							name			: light.name,
+							modelid			: light.modelid,
+							state			: {},
+							hardwareState	: {},
+							setLightState	: function( state, callback ){
+								bulb.hardwareState = extend(bulb.hardwareState, bulb.state);
+								return bridge.api.setLightState( light.id, state, callback)
+							},
+							setLightName	: function( light_id, name ) {
+								return bridge.api.setLightName( light_id, name );
+							}
+						};
+						
+						Homey.log('Found bulb: ' + light.name + ' (id: ' + light.id + ')');
+					} else {
+						var bulb = bridge.lights[ light.uniqueid ];
+					}
+
+					// get current light status
+					bridge
+						.api
+						.lightStatus(light.id)
+					    .then(function(status){
+						    			    							
+							var device_data = {
+								id			: bulb.uniqueid,
+								bridge_id	: bridge_id
+							}
+							
+							var values = {
+								onoff 				: status.state.on,
+								dim		 			: (status.state.bri+1) / 255,
+								light_hue 			: status.state.hue / 65535,
+								light_saturation	: (status.state.sat+1) / 255,
+								light_temperature 	: ctToFloat( status.state.ct )
+							}
+							
+							if( status.state.colormode == 'hs' ) {
+								values.light_mode = 'color';
+							} else if( status.state.colormode == 'ct' ) {
+								values.light_mode = 'temperature';
+							}
+						    
+						    // set capabilities if changed
+						    typeCapabilityMap[ light.type ].forEach(function(capability){
+							    if( bulb.state[ capability ] != values[ capability ] ) {
+								    bulb.state[ capability ] =  values[ capability ];
+								    self.realtime( device_data, capability, bulb.state[ capability ] );
+							    }
+						    })
+
+							bulb.hardwareState = extend(bulb.hardwareState, bulb.state);
+							
+							// set available or unavailable			
+							if( status.state.reachable ) {
+								self.setAvailable( device_data );
+							} else {
+								self.setUnavailable( device_data, __("unreachable") );
+							}
+
+							// check if we're done
+							num_lights_paired++;
+							if( num_lights_paired == result.lights.length ) {
+								if( typeof callback == 'function' ) {
+									callback();
+								}
+							}
+
+					    })
+					    .fail(function(){
+							num_lights_paired++;
+							if( num_lights_paired == result.lights.length ) {
+								if( typeof callback == 'function' ) {
+									callback();
+								}
+							}
+
+					    })
+					    .done();
+
+				});
+
+			})
+			.fail(function( err ){
+				Homey.error(err);
+				if( typeof callback == 'function' ) {
+					callback( err );
+				}
+			})
+			.done();
+
+	} else {
+		if( typeof callback == 'function' ) {
+			callback( new Error("Bridge not paired yet") );
+		}
+	}
+
 }
 	
 /*
@@ -194,7 +487,7 @@ function update( light_id, callback ){
 		
 		if( typeof light.state.light_temperature == 'number' ) {
 			state.white(
-				Homey.app.floatToCt(light.state.light_temperature),
+				floatToCt(light.state.light_temperature),
 				light.state.dim * 100
 			)
 		} else {
@@ -224,7 +517,7 @@ function update( light_id, callback ){
 		
 		// emit event to realtime listeners
 		changedStates.forEach(function(capability){
-			module.exports.realtime({
+			self.realtime({
 				id: light.uniqueid
 			}, capability, light.state[capability]);				
 		});
@@ -234,7 +527,34 @@ function update( light_id, callback ){
 	
 }
 
-// get a light
+/*
+	Poll bridges for remote changes
+*/
+function pollBridges(){
+	for( var bridge_id in bridges ) {
+		refreshBridge( bridge_id );		
+	}
+}
+
+/*
+	Get a bridge by ID
+*/
+function getBridge( bridge_id ) {
+	return bridges[ bridge_id ] || new Error("invalid bridge id");
+}
+
+/*
+	Get a light
+*/
 function getLight( light_id ) {
-	return Homey.app.getLight( light_id );
+	return lights[ light_id ] || new Error("invalid light_id")
+}
+
+// color-temperature to float & vice-versa
+function ctToFloat( ct ) {
+	return (ct-154)/(500-154)
+}
+
+function floatToCt( f ) {
+	return (f*(500-154))+154;
 }
