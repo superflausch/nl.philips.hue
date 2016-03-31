@@ -4,7 +4,7 @@ var extend 				= require('util')._extend;
 var node_hue_api 		= require("node-hue-api");
 
 var pollInterval 		= 15000;
-var modelIcons 			= [ 'LCT001', 'LLC020', 'LST001', 'LWB004', 'GU10' ];
+var modelIcons 			= [ 'LCT001', 'LLC020', 'LST001', 'LST002', 'LWB004', 'GU10' ];
 var typeCapabilityMap 	= {
 	'On/Off light'				: [ 'onoff' ],
 	'Dimmable light'			: [ 'onoff', 'dim' ],
@@ -17,24 +17,24 @@ var bridges 			= {};
 var lights 				= {};
 
 var self = {
-		
+
 	init: function( devices_data, callback ){
-		
+
 		refreshBridges(function(err){
 			if( err ) return Homey.error(err);
 			setInterval(pollBridges, pollInterval);
 		});
-		
-		callback();		
+
+		callback();
 	},
-	
+
 	renamed: function( device, name, callback ) {
-		
+
 		callback = callback || function(){}
-		
+
 		var light = getLight( device.id );
 		if( light instanceof Error ) return callback(light);
-		
+
 		light.setLightName( light.id, name )
 		    .then(function(){
 			    Homey.log('renamed light ' + device.id + ' succesfully');
@@ -46,155 +46,154 @@ var self = {
 		    })
 		    .done();
 	},
-	
+
 	deleted: function( device, callback ) {
 		console.log('deleted', device)
 	},
-	
+
 	capabilities: {
-		
+
 		onoff: {
 			get: function( device, callback ){
 				var light = getLight( device.id );
 				if( light instanceof Error ) return callback( light );
-				
+
 				callback( null, light.state.onoff );
 			},
 			set: function( device, onoff, callback ){
 				var light = getLight( device.id );
 				if( light instanceof Error ) return callback( light );
-												
+
 				light.state.onoff = onoff;
-				
+
 				update( device.id, function( result ){
 					if( result instanceof Error ) return callback(result);
-					callback( null, light.state.onoff );					
+					callback( null, light.state.onoff );
 				});
-								
+
 			}
 		},
-		
+
 		dim: {
 			get: function( device, callback ){
 				var light = getLight( device.id );
 				if( light instanceof Error ) return callback( light );
-				
+
 				callback( null, light.state.dim );
 			},
 			set: function( device, dim, callback ){
 				var light = getLight( device.id );
 				if( light instanceof Error ) return callback( light );
-				
+
 				light.state.dim = dim;
-				
+
 				update( device.id, function( result ){
 					if( result instanceof Error ) return callback(result);
-					callback( null, light.state.dim );					
+					callback( null, light.state.dim );
 				});
 			}
 		},
-		
+
 		light_hue: {
 			get: function( device, callback ){
 				var light = getLight( device.id );
 				if( light instanceof Error ) return callback( light );
-							
+
 				callback( null, light.state.light_hue );
 			},
 			set: function( device, light_hue, callback ) {
 				var light = getLight( device.id );
 				if( light instanceof Error ) return callback( light );
-							
+
 				light.state.light_hue = light_hue;
 				light.state.light_temperature = false;
-				
+
 				update( device.id, function( result ){
 					if( result instanceof Error ) return callback(result);
-					callback( null, light.state.light_hue );					
+					callback( null, light.state.light_hue );
 				});
 			}
 		},
-		
+
 		light_saturation: {
 			get: function( device, callback ){
 				var light = getLight( device.id );
 				if( light instanceof Error ) return callback( light );
-							
+
 				callback( null, light.state.light_saturation );
 			},
-			set: function( device, light_saturation, callback ) {			
+			set: function( device, light_saturation, callback ) {
 				var light = getLight( device.id );
 				if( light instanceof Error ) return callback( light );
-											
+
 				light.state.light_saturation = light_saturation;
 				light.state.light_temperature = false;
-				
+
 				update( device.id, function( result ){
 					if( result instanceof Error ) return callback(result);
-					callback( null, light.state.light_saturation );					
+					callback( null, light.state.light_saturation );
 				});
-				
+
 			}
 		},
-		
+
 		light_temperature: {
 			get: function( device, callback ) {
 				var light = getLight( device.id );
 				if( light instanceof Error ) return callback( light );
-				
+
 				callback( null, light.state.light_temperature );
 			},
 			set: function( device, light_temperature, callback ) {
 				var light = getLight( device.id );
 				if( light instanceof Error ) return callback( light );
-	
+
 				light.state.light_hue = false;
 				light.state.light_temperature = light_temperature;
-				
+
 				update( device.id, function( result ){
 					if( result instanceof Error ) return callback(result);
-					callback( null, light.state.light_temperature );					
+					callback( null, light.state.light_temperature );
 				});
 			}
 		}
-	
+
 	},
-	
+
 	pair: function( socket ) {
 
-		var driver_id = this.driver_id;
 		var paired_bridge_id;
 		var retryTimeouts = {};
-	
+
 		socket.on('press_button', function( data, callback ){
-	
+
 			refreshBridges(function( err ){
 				if( err ) Homey.error(err.stack);
-	
+
 				Homey.log('Hue bridge pairing has started', bridges);
-	
+
 				for( var bridge_id in bridges ) {
 					tryRegisterUser( bridge_id );
 				}
-	
+
 				function tryRegisterUser( bridge_id ){
 					var bridge = bridges[bridge_id];
-	
+
 					new node_hue_api.HueApi()
 						.registerUser(bridge.ipaddress, null, 'Homey')
 					    .then(function( access_token ){
 						    Homey.log('Pair button pressed', access_token);
-	
+
 							paired_bridge_id = bridge_id;
-	
+
 						    // clear timeouts
 						    for( var retryTimeout in retryTimeouts ) {
 							    clearTimeout(retryTimeouts[ retryTimeout ]);
 						    }
-	
+
 						    // save the token
 							Homey.manager('settings').set('bridge_token_' + paired_bridge_id, access_token );
-	
+
 							// refresh this bridge
 							addBridgeAndRefresh( bridge_id, bridge.ipaddress, function(){
 								socket.emit('button_pressed');
@@ -208,23 +207,23 @@ var self = {
 						    }, 250);
 					    })
 					    .done();
-	
+
 				}
-	
+
 			});
-	
-	
+
+
 		});
-	
+
 		socket.on('list_devices', function( data, callback ) {
-	
+
 			var bridge = bridges[ paired_bridge_id ];
-	
+
 			var devices = Object
 				.keys(bridge.lights)
 				.map(function(light_id){
 					var light = bridge.lights[light_id];
-					
+
 					var deviceObj = {
 						name	: light.name,
 						data 	: {
@@ -233,28 +232,28 @@ var self = {
 						},
 						capabilities: typeCapabilityMap[ light.type ]
 					};
-	
+
 					if( modelIcons.indexOf(light.modelid) > -1 ) {
 						deviceObj.icon = '/icons/' + light.modelid + '.svg';
 					} else {
 						deviceObj.icon = '/icons/' + modelIcons[0] + '.svg';
 					}
-	
+
 					return deviceObj;
 				});
-	
+
 			callback( null, devices );
-	
+
 		});
-	
+
 		socket.on('disconnect', function(){
 		    for( var retryTimeout in retryTimeouts ) {
 			    clearTimeout(retryTimeouts[ retryTimeout ]);
 		    }
 		})
-	
+
 	}
-	
+
 }
 
 module.exports = self;
@@ -263,7 +262,6 @@ module.exports = self;
 	Search for bridges on the network, and get their state
 */
 function refreshBridges( callback ) {
-
 	callback = callback || function(){}
 
 	// find the bridge
@@ -341,7 +339,7 @@ function refreshBridge( bridge_id, callback ) {
 			.then(function( result ) {
 				var num_lights_paired = 0;
 				result.lights.forEach(function(light){
-					
+
 					var firstTime = ( typeof bridge.lights[ light.uniqueid ] == 'undefined' );
 					if( firstTime ) {
 						var bulb = bridge.lights[ light.uniqueid ] = lights[ light.uniqueid ] = {
@@ -360,7 +358,7 @@ function refreshBridge( bridge_id, callback ) {
 								return bridge.api.setLightName( light_id, name );
 							}
 						};
-						
+
 						Homey.log('Found bulb: ' + light.name + ' (id: ' + light.id + ')');
 					} else {
 						var bulb = bridge.lights[ light.uniqueid ];
@@ -371,12 +369,12 @@ function refreshBridge( bridge_id, callback ) {
 						.api
 						.lightStatus(light.id)
 					    .then(function(status){
-						    			    							
+
 							var device_data = {
 								id			: bulb.uniqueid,
 								bridge_id	: bridge_id
 							}
-							
+
 							var values = {
 								onoff 				: status.state.on,
 								dim		 			: (status.state.bri+1) / 255,
@@ -384,13 +382,13 @@ function refreshBridge( bridge_id, callback ) {
 								light_saturation	: (status.state.sat+1) / 255,
 								light_temperature 	: ctToFloat( status.state.ct )
 							}
-							
+
 							if( status.state.colormode == 'hs' ) {
 								values.light_mode = 'color';
 							} else if( status.state.colormode == 'ct' ) {
 								values.light_mode = 'temperature';
 							}
-						    
+
 						    // set capabilities if changed
 						    typeCapabilityMap[ light.type ].forEach(function(capability){
 							    if( bulb.state[ capability ] != values[ capability ] ) {
@@ -400,8 +398,8 @@ function refreshBridge( bridge_id, callback ) {
 						    })
 
 							bulb.hardwareState = extend(bulb.hardwareState, bulb.state);
-							
-							// set available or unavailable			
+
+							// set available or unavailable
 							if( status.state.reachable ) {
 								self.setAvailable( device_data );
 							} else {
@@ -446,22 +444,22 @@ function refreshBridge( bridge_id, callback ) {
 	}
 
 }
-	
+
 /*
 	Update a single bulb's state
 */
 function update( light_id, callback ){
-	
+
 	callback = callback || function(){}
-	
+
 	var light = getLight( light_id );
 	if( light instanceof Error ) return callback(light);
-	
+
 	// create a new Philips State object from the bulb's state
 	var state = node_hue_api.lightState.create();
-	
+
 	var changedStates = [];
-			
+
 	// update: onoff
 	if( light.state.onoff != light.hardwareState.onoff ) {
 		changedStates.push('onoff')
@@ -471,27 +469,27 @@ function update( light_id, callback ){
 			state.off();
 		}
 	}
-	
+
 	// update: light_temperature && light_hue && light_saturation
 	if(
 		light.state.dim					!= light.hardwareState.dim					||
-		light.state.light_temperature 	!= light.hardwareState.light_temperature 	|| 
+		light.state.light_temperature 	!= light.hardwareState.light_temperature 	||
 		light.state.light_hue 			!= light.hardwareState.light_hue 			||
 		light.state.light_saturation 	!= light.hardwareState.light_saturation
 	) {
-		
+
 		if( light.state.dim					!= light.hardwareState.dim ) 				changedStates.push('dim');
 		if( light.state.light_temperature 	!= light.hardwareState.light_temperature ) 	changedStates.push('light_temperature');
 		if( light.state.light_hue 			!= light.hardwareState.light_hue ) 			changedStates.push('light_hue');
 		if( light.state.light_saturation 	!= light.hardwareState.light_saturation ) 	changedStates.push('light_saturation');
-		
+
 		if( typeof light.state.light_temperature == 'number' ) {
 			state.white(
 				floatToCt(light.state.light_temperature),
 				light.state.dim * 100
 			)
 		} else {
-						
+
 			state.hsl(
 				Math.floor( light.state.light_hue * 360 ),
 				Math.floor( light.state.light_saturation * 100 ),
@@ -499,32 +497,32 @@ function update( light_id, callback ){
 			);
 		}
 	}
-				
+
 	if( changedStates.length < 1 ) return callback();
-			
+
 	// clear debounce
 	if( light.updateTimeout ) clearTimeout(light.updateTimeout);
-	
+
 	// debounce
 	light.updateTimeout = setTimeout(function(){
-				
-		// find bulb id by uniqueid			
+
+		// find bulb id by uniqueid
 		light.setLightState( state, function(err, result){
 			// TODO
 			//if( err ) return self.setUnavailable(  );
 			//self.setAvailable(  );
 		});
-		
+
 		// emit event to realtime listeners
 		changedStates.forEach(function(capability){
 			self.realtime({
 				id: light.uniqueid
-			}, capability, light.state[capability]);				
+			}, capability, light.state[capability]);
 		});
-		
+
 		callback();
 	}, 150);
-	
+
 }
 
 /*
@@ -532,7 +530,7 @@ function update( light_id, callback ){
 */
 function pollBridges(){
 	for( var bridge_id in bridges ) {
-		refreshBridge( bridge_id );		
+		refreshBridge( bridge_id );
 	}
 }
 
