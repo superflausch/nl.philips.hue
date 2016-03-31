@@ -4,13 +4,36 @@ var extend 				= require('util')._extend;
 var node_hue_api 		= require("node-hue-api");
 
 var pollInterval 		= 15000;
-var modelIcons 			= [ 'LCT001', 'LLC020', 'LST001', 'LST002', 'LWB004', 'GU10' ];
 var typeCapabilityMap 	= {
 	'On/Off light'				: [ 'onoff' ],
 	'Dimmable light'			: [ 'onoff', 'dim' ],
 	'Color Temperature Light'	: [ 'onoff', 'light_temperature' ],
 	'Color light'				: [ 'onoff', 'dim', 'light_hue', 'light_saturation' ],
 	'Extended color light'		: [ 'onoff', 'dim', 'light_hue', 'light_saturation', 'light_temperature' /*,light_mode*/ ],
+}
+var defaultIcon 		= 'LCT001';
+var iconsMap			= {
+	'LCT001'	: 'LCT001',
+	'LCT007'	: 'LCT001',
+	'LCT002'	: 'LCT003', // TODO
+	'LCT003'	: 'LCT003',
+	'LST001'	: 'LST001',
+	'LLC010'	: defaultIcon, // TODO
+	'LLC011'	: defaultIcon, // TODO
+	'LLC012'	: defaultIcon, // TODO
+	'LLC006'	: defaultIcon, // TODO
+	'LLC007'	: defaultIcon, // TODO
+	'LLC013'	: defaultIcon, // TODO
+	'LWB004'	: 'LCT001',
+	'LWB006'	: 'LCT001',
+	'LWB007'	: 'LCT001',
+	'LLM001'	: defaultIcon,
+	'LLM010'	: defaultIcon,
+	'LLM011'	: defaultIcon,
+	'LLM012'	: defaultIcon,
+	'LLC020'	: 'LLC020',
+	'LST002'	: 'LST001'
+
 }
 
 var bridges 			= {};
@@ -233,10 +256,8 @@ var self = {
 						capabilities: typeCapabilityMap[ light.type ]
 					};
 
-					if( modelIcons.indexOf(light.modelid) > -1 ) {
-						deviceObj.icon = '/icons/' + light.modelid + '.svg';
-					} else {
-						deviceObj.icon = '/icons/' + modelIcons[0] + '.svg';
+					if( typeof iconsMap[ light.modelid ] == 'string' ) {
+						deviceObj.icon = '/icons/' + iconsMap[ light.modelid ] + '.svg';
 					}
 
 					return deviceObj;
