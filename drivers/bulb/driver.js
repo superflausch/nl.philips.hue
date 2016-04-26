@@ -15,15 +15,15 @@ var defaultIcon 		= 'LCT001';
 var iconsMap			= {
 	'LCT001'	: 'LCT001',
 	'LCT007'	: 'LCT001',
-	'LCT002'	: 'LCT003', // TODO
+	'LCT002'	: 'LCT002',
 	'LCT003'	: 'LCT003',
 	'LST001'	: 'LST001',
-	'LLC010'	: defaultIcon, // TODO
-	'LLC011'	: defaultIcon, // TODO
-	'LLC012'	: defaultIcon, // TODO
-	'LLC006'	: defaultIcon, // TODO
-	'LLC007'	: defaultIcon, // TODO
-	'LLC013'	: defaultIcon, // TODO
+	'LLC010'	: 'LLC010',
+	'LLC011'	: 'LLC011',
+	'LLC012'	: 'LLC011',
+	'LLC006'	: 'LLC010',
+	'LLC007'	: 'LLC007',
+	'LLC013'	: 'LLC013',
 	'LWB004'	: 'LCT001',
 	'LWB006'	: 'LCT001',
 	'LWB007'	: 'LCT001',
