@@ -9,7 +9,7 @@ var typeCapabilityMap 	= {
 	'Dimmable light'			: [ 'onoff', 'dim' ],
 	'Color Temperature Light'	: [ 'onoff', 'light_temperature' ],
 	'Color light'				: [ 'onoff', 'dim', 'light_hue', 'light_saturation' ],
-	'Extended color light'		: [ 'onoff', 'dim', 'light_hue', 'light_saturation', 'light_temperature' /*,light_mode*/ ],
+	'Extended color light'		: [ 'onoff', 'dim', 'light_hue', 'light_saturation', 'light_temperature', 'light_mode' ],
 }
 var defaultIcon 		= 'LCT001';
 var iconsMap			= {
@@ -129,7 +129,6 @@ var self = {
 				if( light instanceof Error ) return callback( light );
 
 				light.state.light_hue = light_hue;
-				light.state.light_temperature = false;
 
 				update( device.id, function( result ){
 					if( result instanceof Error ) return callback(result);
@@ -150,7 +149,6 @@ var self = {
 				if( light instanceof Error ) return callback( light );
 
 				light.state.light_saturation = light_saturation;
-				light.state.light_temperature = false;
 
 				update( device.id, function( result ){
 					if( result instanceof Error ) return callback(result);
@@ -171,12 +169,31 @@ var self = {
 				var light = getLight( device.id );
 				if( light instanceof Error ) return callback( light );
 
-				light.state.light_hue = false;
 				light.state.light_temperature = light_temperature;
 
 				update( device.id, function( result ){
 					if( result instanceof Error ) return callback(result);
 					callback( null, light.state.light_temperature );
+				});
+			}
+		},
+
+		light_mode: {
+			get: function( device, callback ) {
+				var light = getLight( device.id );
+				if( light instanceof Error ) return callback( light );
+
+				callback( null, light.state.light_mode );
+			},
+			set: function( device, light_mode, callback ) {
+				var light = getLight( device.id );
+				if( light instanceof Error ) return callback( light );
+
+				light.state.light_mode = light_mode;
+
+				update( device.id, function( result ){
+					if( result instanceof Error ) return callback(result);
+					callback( null, light.state.light_mode );
 				});
 			}
 		}
@@ -496,15 +513,17 @@ function update( light_id, callback ){
 		light.state.dim					!= light.hardwareState.dim					||
 		light.state.light_temperature 	!= light.hardwareState.light_temperature 	||
 		light.state.light_hue 			!= light.hardwareState.light_hue 			||
-		light.state.light_saturation 	!= light.hardwareState.light_saturation
+		light.state.light_saturation 	!= light.hardwareState.light_saturation		||
+		light.state.light_mode		 	!= light.hardwareState.light_mode
 	) {
 
 		if( light.state.dim					!= light.hardwareState.dim ) 				changedStates.push('dim');
 		if( light.state.light_temperature 	!= light.hardwareState.light_temperature ) 	changedStates.push('light_temperature');
 		if( light.state.light_hue 			!= light.hardwareState.light_hue ) 			changedStates.push('light_hue');
 		if( light.state.light_saturation 	!= light.hardwareState.light_saturation ) 	changedStates.push('light_saturation');
+		if( light.state.light_mode 			!= light.hardwareState.light_mode ) 		changedStates.push('light_mode');
 
-		if( typeof light.state.light_temperature == 'number' ) {
+		if( light.state.light_mode == 'temperature' ) {
 			state.white(
 				floatToCt(light.state.light_temperature),
 				light.state.dim * 100
