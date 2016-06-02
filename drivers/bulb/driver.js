@@ -48,6 +48,76 @@ var self = {
 			setInterval(pollBridges, pollInterval);
 		});
 
+		Homey.manager('flow').on('action.shortAlert', function( callback, args ){
+			var light = getLight( args.device.id );
+			if( light instanceof Error ) return callback( light );
+
+			var state = node_hue_api
+				.lightState
+				.create()
+				.shortAlert();
+
+			light.setLightState( state, callback );
+
+		})
+
+		Homey.manager('flow').on('action.longAlert', function( callback, args ){
+			var light = getLight( args.device.id );
+			if( light instanceof Error ) return callback( light );
+
+			var state = node_hue_api
+				.lightState
+				.create()
+				.longAlert();
+
+			light.setLightState( state, callback );
+
+		})
+
+		Homey.manager('flow').on('action.setScene', function( callback, args ) {
+
+			var bridge = getBridge( args.scene.bridge_id );
+			if( bridge instanceof Error ) return callback( bridge );
+
+			bridge.api.activateScene( args.scene.id, callback );
+
+		});
+
+		Homey.manager('flow').on('action.setScene.scene.autocomplete', function( callback, args ) {
+
+			var result = [];
+
+			var bridges_total 	= Object.keys(bridges).length;
+			var bridges_done	= 0;
+
+			if( bridges_total < 1 ) {
+				return callback( new Error( __("no_bridges") ) );
+			}
+
+			for( var bridge_id in bridges ) {
+
+				bridges[ bridge_id ].api.getScenes(function( err, scenes ){
+
+					if( Array.isArray(scenes) ) {
+						scenes.forEach(function(scene){
+							result.push({
+								bridge_id	: bridge_id,
+								name		: scene.name.split(' on ')[0],
+								id			: scene.id
+							})
+						})
+					}
+
+					if( ++bridges_done == bridges_total ) {
+						callback( null, result );
+					}
+
+				})
+
+			}
+
+		});
+
 		callback();
 	},
 

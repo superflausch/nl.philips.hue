@@ -47,7 +47,49 @@
 			]
 		}
 	],
-	"dependencies": {
-		"node-hue-api": "*"
+	"flow": {
+		"actions": [
+			{
+				"id": "shortAlert",
+				"title": {
+					"en": "Blink the light (short)",
+					"nl": "Knipper de lamp (kort)"
+				},
+				"args": [
+					{
+						"name": "device",
+						"type": "device",
+						"filter": "driver_id=bulb"
+					}
+				]
+			},
+			{
+				"id": "longAlert",
+				"title": {
+					"en": "Blink the light (long)",
+					"nl": "Knipper de lamp (lang)"
+				},
+				"args": [
+					{
+						"name": "device",
+						"type": "device",
+						"filter": "driver_id=bulb"
+					}
+				]
+			},
+			{
+				"id": "setScene",
+				"title": {
+					"en": "Set a scene",
+					"nl": "Activeer een scene"
+				},
+				"args": [
+					{
+						"name": "scene",
+						"type": "autocomplete"
+					}
+				]
+			}
+		]
 	}
 }
