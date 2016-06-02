@@ -1,7 +1,3 @@
-### Philips Hue App for Homey
+### Philips Hue for Homey
 
-This app adds support for Philips Hue products that work with the Philips Hue Bridge. Included are:
-
-* Philips Hue
-* Philips Hue Lux
-* LivingColors (untested)
+This app adds support for all Philips Hue lights that work with the Philips Hue Bridge.
