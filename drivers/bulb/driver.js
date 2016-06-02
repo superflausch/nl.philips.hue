@@ -91,6 +91,8 @@ var self = {
 
 				update( device.id, function( result ){
 					if( result instanceof Error ) return callback(result);
+
+					self.realtime(device, 'onoff', onoff);
 					callback( null, light.state.onoff );
 				});
 
@@ -112,6 +114,8 @@ var self = {
 
 				update( device.id, function( result ){
 					if( result instanceof Error ) return callback(result);
+
+					self.realtime(device, 'dim', dim);
 					callback( null, light.state.dim );
 				});
 			}
@@ -132,6 +136,8 @@ var self = {
 
 				update( device.id, function( result ){
 					if( result instanceof Error ) return callback(result);
+
+					self.realtime(device, 'light_hue', light_hue);
 					callback( null, light.state.light_hue );
 				});
 			}
@@ -152,6 +158,8 @@ var self = {
 
 				update( device.id, function( result ){
 					if( result instanceof Error ) return callback(result);
+
+					self.realtime(device, 'light_saturation', light_saturation);
 					callback( null, light.state.light_saturation );
 				});
 
@@ -173,6 +181,8 @@ var self = {
 
 				update( device.id, function( result ){
 					if( result instanceof Error ) return callback(result);
+
+					self.realtime(device, 'light_temperature', light_temperature);
 					callback( null, light.state.light_temperature );
 				});
 			}
@@ -193,6 +203,8 @@ var self = {
 
 				update( device.id, function( result ){
 					if( result instanceof Error ) return callback(result);
+
+					self.realtime(device, 'light_mode', light_mode);
 					callback( null, light.state.light_mode );
 				});
 			}
@@ -375,7 +387,7 @@ function refreshBridge( bridge_id, callback ) {
 			.api
 			.lights()
 			.then(function( result ) {
-				var num_lights_paired = 0;
+
 				result.lights.forEach(function(light){
 
 					var firstTime = ( typeof bridge.lights[ light.uniqueid ] == 'undefined' );
@@ -387,10 +399,12 @@ function refreshBridge( bridge_id, callback ) {
 							name			: light.name,
 							modelid			: light.modelid,
 							state			: {},
-							hardwareState	: {},
+							device_data 	: {
+								id				: light.uniqueid,
+								bridge_id		: bridge_id
+							},
 							setLightState	: function( state, callback ){
-								bulb.hardwareState = extend(bulb.hardwareState, bulb.state);
-								return bridge.api.setLightState( light.id, state, callback)
+								return bridge.api.setLightState( light.id, state, callback )
 							},
 							setLightName	: function( light_id, name ) {
 								return bridge.api.setLightName( light_id, name );
@@ -402,76 +416,38 @@ function refreshBridge( bridge_id, callback ) {
 						var bulb = bridge.lights[ light.uniqueid ];
 					}
 
-					// get current light status
-					bridge
-						.api
-						.lightStatus(light.id)
-					    .then(function(status){
+					var values = {
+						onoff 				: light.state.on,
+						dim		 			: (light.state.bri+1) / 255,
+						light_hue 			: light.state.hue / 65535,
+						light_saturation	: (light.state.sat+1) / 255,
+						light_temperature 	: ctToFloat( light.state.ct ),
+						light_mode			: ( light.state.colormode == 'ct' ) ? 'temperature' : 'color'
+					}
 
-							var device_data = {
-								id			: bulb.uniqueid,
-								bridge_id	: bridge_id
-							}
+				    // set capabilities if changed
+				    typeCapabilityMap[ light.type ].forEach(function(capability){
+					    if( bulb.state[ capability ] != values[ capability ] ) {
+						    bulb.state[ capability ] =  values[ capability ];
+						    self.realtime( bulb.device_data, capability, bulb.state[ capability ] );
+					    }
+				    })
 
-							var values = {
-								onoff 				: status.state.on,
-								dim		 			: (status.state.bri+1) / 255,
-								light_hue 			: status.state.hue / 65535,
-								light_saturation	: (status.state.sat+1) / 255,
-								light_temperature 	: ctToFloat( status.state.ct )
-							}
-
-							if( status.state.colormode == 'hs' ) {
-								values.light_mode = 'color';
-							} else if( status.state.colormode == 'ct' ) {
-								values.light_mode = 'temperature';
-							}
-
-						    // set capabilities if changed
-						    typeCapabilityMap[ light.type ].forEach(function(capability){
-							    if( bulb.state[ capability ] != values[ capability ] ) {
-								    bulb.state[ capability ] =  values[ capability ];
-								    self.realtime( device_data, capability, bulb.state[ capability ] );
-							    }
-						    })
-
-							bulb.hardwareState = extend(bulb.hardwareState, bulb.state);
-
-							// set available or unavailable
-							if( status.state.reachable ) {
-								self.setAvailable( device_data );
-							} else {
-								self.setUnavailable( device_data, __("unreachable") );
-							}
-
-							// check if we're done
-							num_lights_paired++;
-							if( num_lights_paired == result.lights.length ) {
-								if( typeof callback == 'function' ) {
-									callback();
-								}
-							}
-
-					    })
-					    .fail(function(){
-							num_lights_paired++;
-							if( num_lights_paired == result.lights.length ) {
-								if( typeof callback == 'function' ) {
-									callback();
-								}
-							}
-
-					    })
-					    .done();
+					// set available or unavailable
+					if( light.state.reachable === false ) {
+						self.setUnavailable( bulb.device_data, __("unreachable") );
+					} else if( light.state.reachable === true ) {
+						self.setAvailable( bulb.device_data );
+					}
 
 				});
+
+				callback();
 
 			})
 			.fail(function( err ){
 				Homey.error(err);
-				if( typeof callback == 'function' ) {
-					callback( err );
-				}
+				callback( err );
 			})
 			.done();
 
@@ -496,71 +472,32 @@ function update( light_id, callback ){
 	// create a new Philips State object from the bulb's state
 	var state = node_hue_api.lightState.create();
 
-	var changedStates = [];
-
 	// update: onoff
-	if( light.state.onoff != light.hardwareState.onoff ) {
-		changedStates.push('onoff')
+	if( typeof light.state.onoff != 'undefined' ) {
 		if( light.state.onoff === true ) {
-			state.on();
+			state = state.on();
 		} else {
-			state.off();
+			state = state.off();
 		}
 	}
+
+	// update: dim
+	if( typeof light.state.dim != 'undefined' )						state.bri( Math.floor( light.state.dim * 255 ) )
 
 	// update: light_temperature && light_hue && light_saturation
-	if(
-		light.state.dim					!= light.hardwareState.dim					||
-		light.state.light_temperature 	!= light.hardwareState.light_temperature 	||
-		light.state.light_hue 			!= light.hardwareState.light_hue 			||
-		light.state.light_saturation 	!= light.hardwareState.light_saturation		||
-		light.state.light_mode		 	!= light.hardwareState.light_mode
-	) {
-
-		if( light.state.dim					!= light.hardwareState.dim ) 				changedStates.push('dim');
-		if( light.state.light_temperature 	!= light.hardwareState.light_temperature ) 	changedStates.push('light_temperature');
-		if( light.state.light_hue 			!= light.hardwareState.light_hue ) 			changedStates.push('light_hue');
-		if( light.state.light_saturation 	!= light.hardwareState.light_saturation ) 	changedStates.push('light_saturation');
-		if( light.state.light_mode 			!= light.hardwareState.light_mode ) 		changedStates.push('light_mode');
-
-		if( light.state.light_mode == 'temperature' ) {
-			state.white(
-				floatToCt(light.state.light_temperature),
-				light.state.dim * 100
-			)
-		} else {
-
-			state.hsl(
-				Math.floor( light.state.light_hue * 360 ),
-				Math.floor( light.state.light_saturation * 100 ),
-				Math.floor( light.state.dim * 100 )
-			);
-		}
+	if( light.state.light_mode == 'temperature' ) {
+		if( typeof light.state.light_temperature != 'undefined' )	state.ct( floatToCt( light.state.light_temperature ) );
+	} else {
+		if( typeof light.state.light_hue != 'undefined' ) 			state.hue( Math.floor( light.state.light_hue * 65535 ) );
+		if( typeof light.state.light_saturation != 'undefined' ) 	state.sat( Math.floor( light.state.light_saturation * 255 ) );
 	}
-
-	if( changedStates.length < 1 ) return callback();
 
 	// clear debounce
 	if( light.updateTimeout ) clearTimeout(light.updateTimeout);
 
 	// debounce
 	light.updateTimeout = setTimeout(function(){
-
-		// find bulb id by uniqueid
-		light.setLightState( state, function(err, result){
-			// TODO
-			//if( err ) return self.setUnavailable(  );
-			//self.setAvailable(  );
-		});
-
-		// emit event to realtime listeners
-		changedStates.forEach(function(capability){
-			self.realtime({
-				id: light.uniqueid
-			}, capability, light.state[capability]);
-		});
-
-		callback();
+		light.setLightState( state, callback );
 	}, 150);
 
 }
