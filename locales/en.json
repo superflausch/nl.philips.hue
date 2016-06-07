@@ -6,5 +6,6 @@
 		}
 	},
 	"no_bridges": "No bridges connected",
-	"unreachable": "Unreachable"
+	"unreachable": "Unreachable",
+	"all_lights": "All lights"
 }

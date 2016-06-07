@@ -38,10 +38,17 @@ var iconsMap			= {
 
 var bridges 			= {};
 var lights 				= {};
+var devices				= {}; // [bridge_id][light_id]
 
 var self = {
 
 	init: function( devices_data, callback ){
+
+		devices_data.forEach(function(device_data){
+			self.setUnavailable( device_data, __("unreachable") );
+			devices[ device_data.bridge_id ] = devices[ device_data.bridge_id ] || {};
+			devices[ device_data.bridge_id ][ device_data.id ] = true;
+		})
 
 		refreshBridges(function(err){
 			if( err ) return Homey.error(err);
@@ -97,6 +104,107 @@ var self = {
 			}, args.duration || 20000);
 
 		})
+
+		Homey.manager('flow').on('action.allOff', function( callback, args ) {
+
+			var state = node_hue_api
+				.lightState
+				.create()
+				.off();
+
+			if( args.group.id === 0 ) {
+				for( var bridge_id in bridges ) {
+					bridges[ bridge_id ].api.setGroupLightState( 0, state )
+				}
+
+				for( var light_id in lights ) {
+					if( devices[ lights[light_id].device_data.bridge_id ] && devices[ lights[light_id].device_data.bridge_id ][ lights[light_id].device_data.id ] === true ) {
+						if( typeof lights[light_id].state.onoff != 'undefined' ) {
+							lights[light_id].state.onoff = false;
+							self.realtime(lights[light_id].device_data, 'onoff', false);
+						}
+					}
+				}
+
+			} else {
+
+				var bridge = getBridge( args.group.bridge_id );
+				if( bridge instanceof Error ) return callback( bridge );
+
+				bridge.api.setGroupLightState( args.group.id, state )
+
+				// sync state
+				args.group.lights.forEach(function(light_device_data){
+
+					var light = getLight( light_device_data.id );
+					if( light instanceof Error ) return Homey.error(light);
+
+					light.state.onoff = false;
+					self.realtime(light.device_data, 'onoff', light.state.onoff);
+
+				})
+
+			}
+
+
+
+			callback( null, true );
+
+		});
+
+		Homey.manager('flow').on('action.allOff.group.autocomplete', function( callback, args ) {
+
+			var result = [];
+
+			var bridges_total 	= Object.keys(bridges).length;
+			var bridges_done	= 0;
+
+			if( bridges_total < 1 ) {
+				return callback( new Error( __("no_bridges") ) );
+			}
+
+			for( var bridge_id in bridges ) {
+
+				bridges[ bridge_id ].api.getGroups(function( err, groups ){
+
+					if( Array.isArray(groups) ) {
+						groups.forEach(function(group){
+
+							if( group.id === '0' ) return;
+
+							var lightsArr = [];
+							group.lights.forEach(function(light_id){
+
+								var light = getLightByBridgeAndId( bridge_id, light_id );
+								if( light instanceof Error ) return;
+
+								lightsArr.push( light.device_data );
+							})
+
+							result.push({
+								bridge_id	: bridge_id,
+								name		: group.name,
+								id			: group.id,
+								lights		: lightsArr
+							})
+						})
+					}
+
+					if( ++bridges_done == bridges_total ) {
+
+						result.unshift({
+							name	: __('all_lights'),
+							id		: 0
+						})
+
+						callback( null, result );
+					}
+
+				})
+
+			}
+
+		});
 
 		Homey.manager('flow').on('action.setScene', function( callback, args ) {
 
@@ -166,6 +274,7 @@ var self = {
 
 	deleted: function( device, callback ) {
 		console.log('deleted', device)
+		delete devices[ device.bridge_id ][ device.id ];
 	},
 
 	capabilities: {
@@ -374,7 +483,7 @@ var self = {
 						name	: light.name,
 						data 	: {
 							id			: light.uniqueid,
-							bridge_id	: bridge.id
+							bridge_id	: paired_bridge_id
 						},
 						capabilities: typeCapabilityMap[ light.type ]
 					};
@@ -475,6 +584,7 @@ function refreshBridge( bridge_id, callback ) {
 	var bridge = getBridge( bridge_id );
 	if( bridge instanceof Error ) return callback(bridge);
 
+
 	// if already paired, get lights
 	if( bridge.api !== false ) {
 		bridge
@@ -519,19 +629,23 @@ function refreshBridge( bridge_id, callback ) {
 						light_mode			: ( light.state.colormode == 'ct' ) ? 'temperature' : 'color'
 					}
 
-				    // set capabilities if changed
-				    typeCapabilityMap[ light.type ].forEach(function(capability){
-					    if( bulb.state[ capability ] != values[ capability ] ) {
-						    bulb.state[ capability ] =  values[ capability ];
-						    self.realtime( bulb.device_data, capability, bulb.state[ capability ] );
-					    }
-				    })
+					if( devices[ bulb.device_data.bridge_id ] && devices[ bulb.device_data.bridge_id ][ bulb.device_data.id ] === true ) {
 
-					// set available or unavailable
-					if( light.state.reachable === false ) {
-						self.setUnavailable( bulb.device_data, __("unreachable") );
-					} else if( light.state.reachable === true ) {
-						self.setAvailable( bulb.device_data );
+					    // set capabilities if changed
+					    typeCapabilityMap[ light.type ].forEach(function(capability){
+						    if( bulb.state[ capability ] != values[ capability ] ) {
+							    bulb.state[ capability ] =  values[ capability ];
+							    self.realtime( bulb.device_data, capability, bulb.state[ capability ] );
+						    }
+					    })
+
+						// set available or unavailable
+						if( light.state.reachable === false ) {
+							self.setUnavailable( bulb.device_data, __("unreachable") );
+						} else if( light.state.reachable === true ) {
+							self.setAvailable( bulb.device_data );
+						}
+
 					}
 
 				});
@@ -613,10 +727,24 @@ function getBridge( bridge_id ) {
 }
 
 /*
-	Get a light
+	Get a light by uniqueid
 */
 function getLight( light_id ) {
 	return lights[ light_id ] || new Error("invalid light_id")
+}
+
+/*
+	Get a light by bridge_id and light_id
+*/
+function getLightByBridgeAndId( bridge_id, light_id ) {
+	var bridge = getBridge( bridge_id );
+	if( bridge instanceof Error ) return bridge;
+
+	for( var light_uuid in bridge.lights ) {
+		if( bridge.lights[ light_uuid ].id === light_id ) {
+			return getLight( light_uuid );
+		}
+	}
 }
 
 // color-temperature to float & vice-versa
