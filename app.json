@@ -1,6 +1,6 @@
 {
 	"id": "nl.philips.hue",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"compatibility": ">=0.8.33",
 	"name": {
 		"en": "Philips Hue"
@@ -68,6 +68,20 @@
 				"title": {
 					"en": "Blink the light (long)",
 					"nl": "Knipper de lamp (lang)"
+				},
+				"args": [
+					{
+						"name": "device",
+						"type": "device",
+						"filter": "driver_id=bulb"
+					}
+				]
+			},
+			{
+				"id": "colorLoop",
+				"title": {
+					"en": "Play a colorloop effect",
+					"nl": "Speel een kleur effect"
 				},
 				"args": [
 					{

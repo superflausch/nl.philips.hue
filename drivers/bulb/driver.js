@@ -74,6 +74,30 @@ var self = {
 
 		})
 
+		Homey.manager('flow').on('action.colorLoop', function( callback, args ){
+			var light = getLight( args.device.id );
+			if( light instanceof Error ) return callback( light );
+
+			var state = node_hue_api
+				.lightState
+				.create()
+				.effect('colorloop');
+
+			light.setLightState( state, callback );
+
+			setTimeout(function(){
+
+				var state = node_hue_api
+					.lightState
+					.create()
+					.effect('none');
+
+				light.setLightState( state );
+
+			}, args.duration || 20000);
+
+		})
+
 		Homey.manager('flow').on('action.setScene', function( callback, args ) {
 
 			var bridge = getBridge( args.scene.bridge_id );
