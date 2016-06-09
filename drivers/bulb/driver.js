@@ -40,6 +40,8 @@ var bridges 			= {};
 var lights 				= {};
 var devices				= {}; // [bridge_id][light_id]
 
+var refreshBridgeDebouncer;
+
 var self = {
 
 	init: function( devices_data, callback ){
@@ -272,9 +274,15 @@ var self = {
 		    .done();
 	},
 
-	deleted: function( device, callback ) {
-		console.log('deleted', device)
-		delete devices[ device.bridge_id ][ device.id ];
+	added: function( device_data, callback ) {
+		devices[ device_data.bridge_id ] = devices[ device_data.bridge_id ] || {};
+		devices[ device_data.bridge_id ][ device_data.id ] = true;
+		refreshBridge( device_data.bridge_id );
+	},
+
+	deleted: function( device_data, callback ) {
+		devices[ device_data.bridge_id ] = devices[ device_data.bridge_id ] || {};
+		delete devices[ device_data.bridge_id ][ device_data.id ];
 	},
 
 	capabilities: {
@@ -580,90 +588,95 @@ function refreshBridge( bridge_id, callback ) {
 
 	callback = callback || function(){}
 
-	// get the bridge
-	var bridge = getBridge( bridge_id );
-	if( bridge instanceof Error ) return callback(bridge);
+	if( refreshBridgeDebouncer ) clearTimeout(refreshBridgeDebouncer);
+	refreshBridgeDebouncer = setTimeout(function(){
+
+		// get the bridge
+		var bridge = getBridge( bridge_id );
+		if( bridge instanceof Error ) return callback(bridge);
 
 
-	// if already paired, get lights
-	if( bridge.api !== false ) {
-		bridge
-			.api
-			.lights()
-			.then(function( result ) {
+		// if already paired, get lights
+		if( bridge.api !== false ) {
+			bridge
+				.api
+				.lights()
+				.then(function( result ) {
 
-				result.lights.forEach(function(light){
+					result.lights.forEach(function(light){
 
-					var firstTime = ( typeof bridge.lights[ light.uniqueid ] == 'undefined' );
-					if( firstTime ) {
-						var bulb = bridge.lights[ light.uniqueid ] = lights[ light.uniqueid ] = {
-							uniqueid		: light.uniqueid,
-							id				: light.id,
-							type			: light.type,
-							name			: light.name,
-							modelid			: light.modelid,
-							state			: {},
-							device_data 	: {
-								id				: light.uniqueid,
-								bridge_id		: bridge_id
-							},
-							setLightState	: function( state, callback ){
-								return bridge.api.setLightState( light.id, state, callback )
-							},
-							setLightName	: function( light_id, name ) {
-								return bridge.api.setLightName( light_id, name );
-							}
-						};
+						var firstTime = ( typeof bridge.lights[ light.uniqueid ] == 'undefined' );
+						if( firstTime ) {
+							var bulb = bridge.lights[ light.uniqueid ] = lights[ light.uniqueid ] = {
+								uniqueid		: light.uniqueid,
+								id				: light.id,
+								type			: light.type,
+								name			: light.name,
+								modelid			: light.modelid,
+								state			: {},
+								device_data 	: {
+									id				: light.uniqueid,
+									bridge_id		: bridge_id
+								},
+								setLightState	: function( state, callback ){
+									return bridge.api.setLightState( light.id, state, callback )
+								},
+								setLightName	: function( light_id, name ) {
+									return bridge.api.setLightName( light_id, name );
+								}
+							};
 
-						Homey.log('Found bulb: ' + light.name + ' (id: ' + light.id + ')');
-					} else {
-						var bulb = bridge.lights[ light.uniqueid ];
-					}
-
-					var values = {
-						onoff 				: light.state.on,
-						dim		 			: (light.state.bri+1) / 255,
-						light_hue 			: light.state.hue / 65535,
-						light_saturation	: (light.state.sat+1) / 255,
-						light_temperature 	: ctToFloat( light.state.ct ),
-						light_mode			: ( light.state.colormode == 'ct' ) ? 'temperature' : 'color'
-					}
-
-					if( devices[ bulb.device_data.bridge_id ] && devices[ bulb.device_data.bridge_id ][ bulb.device_data.id ] === true ) {
-
-					    // set capabilities if changed
-					    typeCapabilityMap[ light.type.toLowerCase() ].forEach(function(capability){
-						    if( bulb.state[ capability ] != values[ capability ] ) {
-							    bulb.state[ capability ] =  values[ capability ];
-							    self.realtime( bulb.device_data, capability, bulb.state[ capability ] );
-						    }
-					    })
-
-						// set available or unavailable
-						if( light.state.reachable === false ) {
-							self.setUnavailable( bulb.device_data, __("unreachable") );
-						} else if( light.state.reachable === true ) {
-							self.setAvailable( bulb.device_data );
+							Homey.log('Found bulb: ' + light.name + ' (id: ' + light.id + ')');
+						} else {
+							var bulb = bridge.lights[ light.uniqueid ];
 						}
 
-					}
+						var values = {
+							onoff 				: light.state.on,
+							dim		 			: (light.state.bri+1) / 255,
+							light_hue 			: light.state.hue / 65535,
+							light_saturation	: (light.state.sat+1) / 255,
+							light_temperature 	: ctToFloat( light.state.ct ),
+							light_mode			: ( light.state.colormode == 'ct' ) ? 'temperature' : 'color'
+						}
 
-				});
+						if( devices[ bulb.device_data.bridge_id ] && devices[ bulb.device_data.bridge_id ][ bulb.device_data.id ] === true ) {
 
-				callback();
+						    // set capabilities if changed
+						    typeCapabilityMap[ light.type.toLowerCase() ].forEach(function(capability){
+							    if( bulb.state[ capability ] != values[ capability ] ) {
+								    bulb.state[ capability ] =  values[ capability ];
+								    self.realtime( bulb.device_data, capability, bulb.state[ capability ] );
+							    }
+						    })
 
-			})
-			.fail(function( err ){
-				Homey.error(err);
-				callback( err );
-			})
-			.done();
+							// set available or unavailable
+							if( light.state.reachable === false ) {
+								self.setUnavailable( bulb.device_data, __("unreachable") );
+							} else if( light.state.reachable === true ) {
+								self.setAvailable( bulb.device_data );
+							}
 
-	} else {
-		if( typeof callback == 'function' ) {
-			callback( new Error("Bridge not paired yet") );
+						}
+
+					});
+
+					callback();
+
+				})
+				.fail(function( err ){
+					Homey.error(err);
+					callback( err );
+				})
+				.done();
+
+		} else {
+			if( typeof callback == 'function' ) {
+				callback( new Error("Bridge not paired yet") );
+			}
 		}
-	}
+
+	}, 300);
 
 }
 
