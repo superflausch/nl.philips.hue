@@ -580,8 +580,6 @@ function refreshBridge( bridge_id, callback ) {
 
 	callback = callback || function(){}
 
-	console.log('refreshBridge')
-
 	// get the bridge
 	var bridge = getBridge( bridge_id );
 	if( bridge instanceof Error ) return callback(bridge);
@@ -632,8 +630,6 @@ function refreshBridge( bridge_id, callback ) {
 					}
 
 					if( devices[ bulb.device_data.bridge_id ] && devices[ bulb.device_data.bridge_id ][ bulb.device_data.id ] === true ) {
-
-						console.log('light.type', light.type)
 
 					    // set capabilities if changed
 					    typeCapabilityMap[ light.type.toLowerCase() ].forEach(function(capability){
