@@ -651,10 +651,15 @@ function refreshBridge( bridge_id, callback ) {
 						    })
 
 							// set available or unavailable
-							if( light.state.reachable === false ) {
-								self.setUnavailable( bulb.device_data, __("unreachable") );
-							} else if( light.state.reachable === true ) {
+							// Living Color lights's reachable flag is flaky, though
+							if( light.modelid === 'LLC006' || light.modelid === 'LLC007' ) {
 								self.setAvailable( bulb.device_data );
+							} else {
+								if( light.state.reachable === false ) {
+									self.setUnavailable( bulb.device_data, __("unreachable") );
+								} else if( light.state.reachable === true ) {
+									self.setAvailable( bulb.device_data );
+								}
 							}
 
 						}
