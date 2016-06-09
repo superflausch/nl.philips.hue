@@ -7,6 +7,7 @@ var pollInterval 		= 15000;
 var typeCapabilityMap 	= {
 	'on/off light'				: [ 'onoff' ],
 	'dimmable light'			: [ 'onoff', 'dim' ],
+	'dimmable plug-in unit'		: [ 'onoff', 'dim' ],
 	'color temperature light'	: [ 'onoff', 'dim', 'light_temperature' ],
 	'color light'				: [ 'onoff', 'dim', 'light_hue', 'light_saturation' ],
 	'extended color light'		: [ 'onoff', 'dim', 'light_hue', 'light_saturation', 'light_temperature', 'light_mode' ],
@@ -278,6 +279,7 @@ var self = {
 		devices[ device_data.bridge_id ] = devices[ device_data.bridge_id ] || {};
 		devices[ device_data.bridge_id ][ device_data.id ] = true;
 		refreshBridge( device_data.bridge_id );
+		self.setUnavailable( device_data, __("unreachable") );
 	},
 
 	deleted: function( device_data, callback ) {
@@ -443,7 +445,7 @@ var self = {
 					var bridge = bridges[bridge_id];
 
 					new node_hue_api.HueApi()
-						.registerUser(bridge.ipaddress, null, 'Homey')
+						.registerUser(bridge.ipaddress, 'Homey')
 					    .then(function( access_token ){
 						    Homey.log('Pair button pressed', access_token);
 
@@ -501,7 +503,10 @@ var self = {
 					}
 
 					return deviceObj;
-				});
+				})
+				.filter(function(deviceObj){
+					return Array.isArray(deviceObj.capabilities); // filter devices with unsupported map
+				})
 
 			callback( null, devices );
 
@@ -643,12 +648,15 @@ function refreshBridge( bridge_id, callback ) {
 						if( devices[ bulb.device_data.bridge_id ] && devices[ bulb.device_data.bridge_id ][ bulb.device_data.id ] === true ) {
 
 						    // set capabilities if changed
-						    typeCapabilityMap[ light.type.toLowerCase() ].forEach(function(capability){
-							    if( bulb.state[ capability ] != values[ capability ] ) {
-								    bulb.state[ capability ] =  values[ capability ];
-								    self.realtime( bulb.device_data, capability, bulb.state[ capability ] );
-							    }
-						    })
+						    var capabilities = typeCapabilityMap[ light.type.toLowerCase() ];
+						    if( Array.isArray(capabilities) ) {
+							    capabilities.forEach(function(capability){
+								    if( bulb.state[ capability ] != values[ capability ] ) {
+									    bulb.state[ capability ] =  values[ capability ];
+									    self.realtime( bulb.device_data, capability, bulb.state[ capability ] );
+								    }
+							    })
+						    }
 
 							// set available or unavailable
 							// Living Color lights's reachable flag is flaky, though
