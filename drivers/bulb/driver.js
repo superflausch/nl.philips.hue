@@ -5,11 +5,11 @@ var node_hue_api 		= require("node-hue-api");
 
 var pollInterval 		= 15000;
 var typeCapabilityMap 	= {
-	'On/Off light'				: [ 'onoff' ],
-	'Dimmable light'			: [ 'onoff', 'dim' ],
-	'Color Temperature Light'	: [ 'onoff', 'light_temperature' ],
-	'Color light'				: [ 'onoff', 'dim', 'light_hue', 'light_saturation' ],
-	'Extended color light'		: [ 'onoff', 'dim', 'light_hue', 'light_saturation', 'light_temperature', 'light_mode' ],
+	'on/off light'				: [ 'onoff' ],
+	'dimmable light'			: [ 'onoff', 'dim' ],
+	'color temperature light'	: [ 'onoff', 'dim', 'light_temperature' ],
+	'color light'				: [ 'onoff', 'dim', 'light_hue', 'light_saturation' ],
+	'extended color light'		: [ 'onoff', 'dim', 'light_hue', 'light_saturation', 'light_temperature', 'light_mode' ],
 }
 var defaultIcon 		= 'LCT001';
 var iconsMap			= {
@@ -485,7 +485,7 @@ var self = {
 							id			: light.uniqueid,
 							bridge_id	: paired_bridge_id
 						},
-						capabilities: typeCapabilityMap[ light.type ]
+						capabilities: typeCapabilityMap[ light.type.toLowerCase() ]
 					};
 
 					if( typeof iconsMap[ light.modelid ] == 'string' ) {
@@ -580,6 +580,8 @@ function refreshBridge( bridge_id, callback ) {
 
 	callback = callback || function(){}
 
+	console.log('refreshBridge')
+
 	// get the bridge
 	var bridge = getBridge( bridge_id );
 	if( bridge instanceof Error ) return callback(bridge);
@@ -631,8 +633,10 @@ function refreshBridge( bridge_id, callback ) {
 
 					if( devices[ bulb.device_data.bridge_id ] && devices[ bulb.device_data.bridge_id ][ bulb.device_data.id ] === true ) {
 
+						console.log('light.type', light.type)
+
 					    // set capabilities if changed
-					    typeCapabilityMap[ light.type ].forEach(function(capability){
+					    typeCapabilityMap[ light.type.toLowerCase() ].forEach(function(capability){
 						    if( bulb.state[ capability ] != values[ capability ] ) {
 							    bulb.state[ capability ] =  values[ capability ];
 							    self.realtime( bulb.device_data, capability, bulb.state[ capability ] );
@@ -693,7 +697,7 @@ function update( light_id, callback ){
 	if( typeof light.state.dim != 'undefined' )						state.bri( Math.floor( light.state.dim * 255 ) )
 
 	// update: light_temperature && light_hue && light_saturation
-	if( light.state.light_mode == 'temperature' ) {
+	if( light.state.light_mode == 'temperature' || ( typeof light.state.light_hue === 'undefined' && typeof light.state.light_temperature === 'number' ) ) {
 		if( typeof light.state.light_temperature != 'undefined' )	state.ct( floatToCt( light.state.light_temperature ) );
 	} else {
 		if( typeof light.state.light_hue != 'undefined' ) 			state.hue( Math.floor( light.state.light_hue * 65535 ) );
