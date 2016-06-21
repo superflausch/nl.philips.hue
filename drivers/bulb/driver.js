@@ -104,7 +104,33 @@ var self = {
 
 				light.setLightState( state );
 
-			}, args.duration || 20000);
+			}, args.duration*1000 || 20000);
+
+		})
+
+		Homey.manager('flow').on('action.startColorLoop', function( callback, args ){
+			var light = getLight( args.device.id );
+			if( light instanceof Error ) return callback( light );
+
+			var state = node_hue_api
+				.lightState
+				.create()
+				.effect('colorloop');
+
+			light.setLightState( state, callback );
+
+		})
+
+		Homey.manager('flow').on('action.stopColorLoop', function( callback, args ){
+			var light = getLight( args.device.id );
+			if( light instanceof Error ) return callback( light );
+
+			var state = node_hue_api
+				.lightState
+				.create()
+				.effect('none');
+
+			light.setLightState( state , callback);
 
 		})
 

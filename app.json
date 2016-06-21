@@ -88,6 +88,42 @@
 						"name": "device",
 						"type": "device",
 						"filter": "driver_id=bulb"
+					},{
+						"name": "duration",
+						"type": "number",
+						"placeholder":{
+							"en": "Duration in seconds",
+							"nl": "Tijdsduur in seconden"
+						},
+						"min":"0"
+					}
+				]
+			},
+			{
+				"id": "startColorLoop",
+				"title": {
+					"en": "Start colorloop effect",
+					"nl": "Begin kleur effect"
+				},
+				"args": [
+					{
+						"name": "device",
+						"type": "device",
+						"filter": "driver_id=bulb"
+					}
+				]
+			},
+			{
+				"id": "stopColorLoop",
+				"title": {
+					"en": "Stop colorloop effect",
+					"nl": "Stop kleur effect"
+				},
+				"args": [
+					{
+						"name": "device",
+						"type": "device",
+						"filter": "driver_id=bulb"
 					}
 				]
 			},
