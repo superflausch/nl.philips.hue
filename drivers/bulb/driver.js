@@ -71,6 +71,21 @@ var self = {
 
 		})
 
+		Homey.manager('flow').on('action.brightnessIncrement', function( callback, args ){
+		
+			var light = getLight( args.device.id );
+			if( light instanceof Error ) return callback( light );
+
+			
+			var state = node_hue_api
+				.lightState
+				.create().bri((254 / 100) * args.brightness).transitiontime(args.trans * 10);
+
+			light.setLightState( state, callback );
+
+		})
+
+
 		Homey.manager('flow').on('action.longAlert', function( callback, args ){
 			var light = getLight( args.device.id );
 			if( light instanceof Error ) return callback( light );
