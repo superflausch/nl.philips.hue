@@ -138,23 +138,13 @@ var self = {
 			var light = getLight( args.device.id );
 			if( light instanceof Error ) return callback( light );
 
-			/*
 			var state = node_hue_api
 				.lightState
 				.create()
-				.effect('none');
+				.hue(Math.floor((Math.random() *65536)))
+				.sat(255);
 
 			light.setLightState( state , callback);
-			*/
-			
-			light.state.light_hue = Math.floor((Math.random() *65536)+1);
-
-			update( device.id, function( result ){
-				if( result instanceof Error ) return callback(result);
-
-				self.realtime(device, 'light_hue', light_hue);
-				callback( null, light.state.light_hue );
-			});
 			
 		})
 
