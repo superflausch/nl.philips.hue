@@ -86,54 +86,33 @@
 			{
 				"id": "brightnessIncrement",
 				"title": {
-					"en": "Brightness transition",
-					"nl": "helderheid overgang"
+					"en": "Change brightness over time",
+					"nl": "Verander helderheid over tijd"
 				},
 				"args": [
 					{
 						"name": "device",
 						"type": "device",
 						"filter": "driver_id=bulb"
-					},{
+					},
+					{
 						"name": "trans",
 						"type": "number",
 						"placeholder":{
-							"en": "transition in seconds",
-							"nl": "Tijdsduur in seconden"
+							"en": "Transition (s)",
+							"nl": "Tijdsduur (s)"
 						},
 						"min":"0"
-					},{
+					},
+					{
 						"name": "brightness",
 						"type": "number",
 						"placeholder":{
-							"en": "brightness in percentage",
-							"nl": "helderheid in percentage"
+							"en": "Brightness (%)",
+							"nl": "Helderheid (%)"
 						},
 						"min":"0",
 						"max":"100"
-
-					}
-				]
-			},
-			{
-				"id": "colorLoop",
-				"title": {
-					"en": "Play a colorloop effect",
-					"nl": "Speel een kleur effect"
-				},
-				"args": [
-					{
-						"name": "device",
-						"type": "device",
-						"filter": "driver_id=bulb"
-					},{
-						"name": "duration",
-						"type": "number",
-						"placeholder":{
-							"en": "Duration in seconds",
-							"nl": "Tijdsduur in seconden"
-						},
-						"min":"0"
 					}
 				]
 			},

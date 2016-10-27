@@ -1,5 +1,9 @@
 {
 	"pair": {
+		"select_bridge": {
+			"title": "Selecteer je Philips Hue bridge",
+			"no_bridges": "Geen Philips Hue bridge gevonden."
+		},
 		"press_button": {
 			"title": "Druk op de knop",
 			"description": "Druk op de knop van je Philips Hue bridge"

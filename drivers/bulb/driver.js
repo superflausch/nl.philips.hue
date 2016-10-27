@@ -84,6 +84,13 @@ class Driver {
 
 		this._devices = {};
 
+		Homey.manager('flow').on('action.shortAlert', this._onFlowActionShortAlert.bind(this));
+		Homey.manager('flow').on('action.longAlert', this._onFlowActionLongAlert.bind(this));
+		Homey.manager('flow').on('action.startColorLoop', this._onFlowActionStartColorLoop.bind(this));
+		Homey.manager('flow').on('action.stopColorLoop', this._onFlowActionStopColorLoop.bind(this));
+		Homey.manager('flow').on('action.setRandomColor', this._onFlowActionSetRandomColor.bind(this));
+		Homey.manager('flow').on('action.brightnessIncrement', this._onFlowActionBrightnessIncrement.bind(this));
+
 	}
 
 	/*
@@ -101,6 +108,43 @@ class Driver {
 
 	error() {
 		Homey.app.error.bind( Homey.app, '[bulb][error]' ).apply( Homey.app, arguments );
+	}
+
+	getDeviceData( bridge, light ) {
+		return {
+			id: light.uniqueId,
+			bridge_id: bridge.id
+		}
+	}
+
+	_convertValue( capabilityId, direction, value ) {
+
+		if( capabilityId === 'dim' || capabilityId === 'light_saturation'  ) {
+			if( direction === 'get' ) {
+				return value / 254;
+			} else 	if( direction === 'set' ) {
+				return Math.round( value * 254 );
+			}
+		} else if( capabilityId === 'light_hue' ) {
+			if( direction === 'get' ) {
+				return value / 65535;
+			} else if( direction === 'set' ) {
+				return Math.round( value * 65535 );
+			}
+		} else if( capabilityId === 'light_temperature' ) {
+			if( direction === 'get' ) {
+				return ( value - 153 ) / ( 500 - 153 );
+			} else if( direction === 'set' ) {
+				return Math.round( 153 + value * ( 500 - 153 ) );
+			}
+		} else if( capabilityId === 'light_mode' ) {
+			if( direction === 'get' ) {
+				return ( value === 'ct' ) ? 'temperature' : 'color'
+			}
+		} else {
+			return value;
+		}
+
 	}
 
 	/*
@@ -191,6 +235,7 @@ class Driver {
 			device.saveTimeout = setTimeout(() => {
 
 				device.transitionTime = transitionTime;
+
 				return bridge.saveLight( device )
 					.then(( result ) => {
 						callback && callback( null, result );
@@ -249,7 +294,7 @@ class Driver {
 					result.push({
 						id		: bridgeId,
 						name	: bridge.name || bridge.address,
-						icon	: `/app/${Homey.manifest.id}/assets/images/bridges/${bridge.modelId}.svg`
+						icon	: bridge.icon
 					})
 				}
 
@@ -296,10 +341,7 @@ class Driver {
 
 					let deviceObj = {
 						name	: light.name,
-						data 	: {
-							id			: light.uniqueId,
-							bridge_id	: bridge.id
-						},
+						data 	: this.getDeviceData( bridge, light ),
 						capabilities: deviceCapabilities
 					};
 
@@ -349,7 +391,7 @@ class Driver {
 		callback( null, this._convertValue( 'dim', 'get', device[ capabilityMap['dim'] ] ) );
 	}
 
-	_onExportsCapabilitiesDimSet( device_data, value, callback ) {
+	_onExportsCapabilitiesDimSet( device_data, value, callback, transitionTime ) {
 		this.debug('_onExportsCapabilitiesDimSet', device_data.id, value);
 
 		let device = this.getDevice( device_data );
@@ -360,7 +402,11 @@ class Driver {
 		device[ capabilityMap['onoff'] ] = this._convertValue( 'onoff', 'set', value > 0 );
 		module.exports.realtime( device_data, 'onoff', device[ capabilityMap['onoff'] ] );
 
-		device.save( callback );
+		if( typeof transitionTime === 'number' ) {
+			device.save( transitionTime, callback );
+		} else {
+			device.save( callback );
+		}
 	}
 
 	// light_hue
@@ -464,34 +510,69 @@ class Driver {
 		}
 	}
 
-	_convertValue( capabilityId, direction, value ) {
+	/*
+		Flow methods
+	*/
+	_onFlowActionShortAlert( callback, args, state ) {
 
-		if( capabilityId === 'dim' || capabilityId === 'light_saturation'  ) {
-			if( direction === 'get' ) {
-				return value / 254;
-			} else 	if( direction === 'set' ) {
-				return Math.round( value * 254 );
-			}
-		} else if( capabilityId === 'light_hue' ) {
-			if( direction === 'get' ) {
-				return value / 65535;
-			} else if( direction === 'set' ) {
-				return Math.round( value * 65535 );
-			}
-		} else if( capabilityId === 'light_temperature' ) {
-			if( direction === 'get' ) {
-				return ( value - 153 ) / ( 500 - 153 );
-			} else if( direction === 'set' ) {
-				return Math.round( 153 + value * ( 500 - 153 ) );
-			}
-		} else if( capabilityId === 'light_mode' ) {
-			if( direction === 'get' ) {
-				return ( value === 'ct' ) ? 'temperature' : 'color'
-			}
-		} else {
-			return value;
-		}
+		let device = this.getDevice( args.device );
+		if( device instanceof Error ) return callback( device );
 
+		device.alert = 'select';
+		device.save( callback );
+
+	}
+
+	_onFlowActionLongAlert( callback, args, state ) {
+
+		let device = this.getDevice( args.device );
+		if( device instanceof Error ) return callback( device );
+
+		device.alert = 'lselect';
+		device.save( callback );
+
+	}
+
+	_onFlowActionStartColorLoop( callback, args, state ) {
+
+		let device = this.getDevice( args.device );
+		if( device instanceof Error ) return callback( device );
+
+		device.effect = 'colorloop';
+		device.save( callback );
+
+	}
+
+	_onFlowActionStopColorLoop( callback, args, state ) {
+
+		let device = this.getDevice( args.device );
+		if( device instanceof Error ) return callback( device );
+
+		device.effect = 'none';
+		device.save( callback );
+
+	}
+
+	_onFlowActionSetRandomColor( callback, args, state ) {
+
+		let device = this.getDevice( args.device );
+		if( device instanceof Error ) return callback( device );
+
+		var hue = Math.random();
+		var saturation = 1;
+
+		module.exports.realtime( args.device, 'light_hue', hue );
+		module.exports.realtime( args.device, 'light_saturation', saturation );
+
+		device[ capabilityMap['light_hue'] ] = this._convertValue( 'light_hue', 'set', hue );
+		device[ capabilityMap['light_saturation'] ] = this._convertValue( 'light_saturation', 'set', saturation );
+
+		device.save( callback );
+
+	}
+
+	_onFlowActionBrightnessIncrement( callback, args, state ) {
+		this._onExportsCapabilitiesDimSet( args.device, args.brightness/100, callback, args.trans )
 	}
 
 }
