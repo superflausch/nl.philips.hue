@@ -296,7 +296,10 @@ class Driver {
 
 					let deviceObj = {
 						name	: light.name,
-						data 	: this._lightToDeviceData( bridge, light ),
+						data 	: {
+							id			: light.uniqueId,
+							bridge_id	: bridge.id
+						},
 						capabilities: deviceCapabilities
 					};
 
@@ -458,13 +461,6 @@ class Driver {
 			device.save( callback );
 		} else {
 			callback( new Error('invalid_mode') );
-		}
-	}
-
-	_lightToDeviceData( bridge, light ) {
-		return {
-			id			: light.uniqueId,
-			bridge_id	: bridge.id
 		}
 	}
 
