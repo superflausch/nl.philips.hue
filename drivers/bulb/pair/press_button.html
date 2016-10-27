@@ -1,23 +1,39 @@
 <style type="text/css">
-.view[data-id="press_button"] {
+#press-button-image {
+	position: absolute;
+	z-index: -1;
+	left: 0;
+	right: 0;
+	top: 0;
+	bottom: 0;
 	background: url(./pair-bridge.png) no-repeat center center;
+	display: none;
 }
 
 @media only screen and (max-width: 512px) {
-	.view[data-id="press_button"] {
+	#press-button-image {
         background-size: contain;
     }
 }
 </style>
 
 <p data-i18n="pair.press_button.description"></p>
+<div id="press-button-image"></div>
 
 <script type="text/javascript">
 Homey.setTitle( __('pair.press_button.title') );
 
-Homey.emit('press_button');
-
-Homey.on('button_pressed', function(){
-	Homey.showView('list_bulbs');
+Homey.emit('press_button', {
+	bridgeId: window.hue_bridgeId
+}, function( err, authenticated ){
+	if( err ) return Homey.alert( err, 'error' );
+	if( authenticated === true ) return Homey.showView('list_devices');
+	$('#press-button-image').show();
 });
+
+Homey.on('authenticated', function(){
+	Homey.showView('list_devices');
+});
+
+console.log('window.hue_bridgeId', window.hue_bridgeId)
 </script>

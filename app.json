@@ -20,8 +20,8 @@
 		{
 			"id": "bulb",
 			"name": {
-				"en": "Philips Hue",
-				"nl": "Philips Hue"
+				"en": "Light",
+				"nl": "Lamp"
 			},
 			"class": "light",
 			"capabilities": [ "onoff", "dim", "light_hue", "light_saturation", "light_temperature" ],
@@ -31,17 +31,23 @@
 			},
 			"pair": [
 				{
-					"id": "press_button"
-				},
-				{
-					"id": "list_bulbs",
-					"template": "list_devices",
+					"id": "select_bridge",
 					"navigation": {
-						"next": "add_bulbs"
+						"next": "press_button"
 					}
 				},
 				{
-					"id": "add_bulbs",
+					"id": "press_button"
+				},
+				{
+					"id": "list_devices",
+					"template": "list_devices",
+					"navigation": {
+						"next": "add_devices"
+					}
+				},
+				{
+					"id": "add_devices",
 					"template": "add_devices"
 				}
 			]
