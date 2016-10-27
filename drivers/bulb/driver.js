@@ -148,6 +148,20 @@ var self = {
 			light.setLightState( state , callback);
 
 		})
+		
+		Homey.manager('flow').on('action.setRandomColor', function( callback, args ){
+			var light = getLight( args.device.id );
+			if( light instanceof Error ) return callback( light );
+
+			var state = node_hue_api
+				.lightState
+				.create()
+				.hue(Math.floor((Math.random() *65536)))
+				.sat(255);
+
+			light.setLightState( state , callback);
+			
+		})
 
 		Homey.manager('flow').on('action.allOff', function( callback, args ) {
 

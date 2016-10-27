@@ -160,6 +160,20 @@
 				]
 			},
 			{
+				"id": "setRandomColor",
+				"title": {
+					"en": "Set random color",
+					"nl": "Kies willekeurige kleur"
+				},
+				"args": [
+					{
+						"name": "device",
+						"type": "device",
+						"filter": "driver_id=bulb"
+					}
+				]
+			},
+			{
 				"id": "setScene",
 				"title": {
 					"en": "Set a scene",
