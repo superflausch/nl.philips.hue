@@ -1,0 +1,3 @@
+[submodule "node_modules/node-hue-api"]
+	path = node_modules/node-hue-api
+	url = git@github.com:peter-murray/node-hue-api.git
