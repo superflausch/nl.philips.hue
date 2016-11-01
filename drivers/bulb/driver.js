@@ -1,6 +1,8 @@
 'use strict';
 
-const pollInterval 			= 15000;
+const sharedPair			= require('../_shared/pair.js');
+
+const pollInterval 			= 5000;
 const typeCapabilityMap 	= {
 	'on/off light'				: [ 'onoff' ],
 	'dimmable light'			: [ 'onoff', 'dim' ],
@@ -81,8 +83,6 @@ class Driver {
 		this.capabilities.light_mode = {};
 		this.capabilities.light_mode.get = this._onExportsCapabilitiesLightModeGet.bind(this);
 		this.capabilities.light_mode.set = this._onExportsCapabilitiesLightModeSet.bind(this);
-
-		this._devices = {};
 
 		Homey.manager('flow').on('action.shortAlert', this._onFlowActionShortAlert.bind(this));
 		Homey.manager('flow').on('action.longAlert', this._onFlowActionLongAlert.bind(this));
@@ -204,7 +204,7 @@ class Driver {
 
 		setTimeout(() => {
 			this._syncDevice( device_data );
-		}, 10000)
+		}, pollInterval);
 
 	}
 
@@ -281,74 +281,33 @@ class Driver {
 
 	_onExportsRenamed( device_data ) {
 		this.debug( '_onExportsRenamed', device_data );
+
+		// TODO
 	}
 
 	_onExportsPair( socket ) {
 		this.debug('_onExportsPair');
 
-		let connected = true;
-		let bridge = undefined;
+		sharedPair( socket, {
+			'list_devices': ( state, data, callback ) => {
 
-		socket
-			.on('select_bridge', ( data, callback ) => {
-
-				let result = [];
-				let bridges = Homey.app.getBridges();
-				for( let bridgeId in bridges ) {
-					let bridge = bridges[ bridgeId ];
-
-					result.push({
-						id		: bridgeId,
-						name	: bridge.name || bridge.address,
-						icon	: bridge.icon
-					})
-				}
-
-				callback( null, result );
-
-			})
-			.on('press_button', ( data, callback ) => {
-
-				bridge = Homey.app.getBridge( data.bridgeId );
-				if( bridge instanceof Error ) return callback( bridge );
-
-				if( bridge.isAuthenticated() ) {
-					return callback( null, true );
-				} else {
-					register();
-					return callback( null, false );
-				}
-
-				function register() {
-					setTimeout(() => {
-						bridge.register(( err, result ) => {
-							if( err && err.type === 101 && connected ) return register();
-							return socket.emit('authenticated');
-						})
-					}, 1000);
-				}
-
-			})
-			.on('list_devices', ( data, callback ) => {
-
-				if( !bridge )
+				if( !state.bridge )
 					return callback( 'invalid_bridge' );
 
-				if( bridge instanceof Error )
-					return callback( bridge );
+				if( state.bridge instanceof Error )
+					return callback( state.bridge );
 
 				let result = [];
 
-				let lights = bridge.getLights();
-				for( let light of lights ) {
+				for( let light of state.bridge.getLights() ) {
 
 					let deviceCapabilities = typeCapabilityMap[ light.type.toLowerCase() ];
 					if( !Array.isArray( deviceCapabilities ) ) return;
 
 					let deviceObj = {
-						name	: light.name,
-						data 	: this.getDeviceData( bridge, light ),
-						capabilities: deviceCapabilities
+						name			: light.name,
+						data 			: this.getDeviceData( state.bridge, light ),
+						capabilities	: deviceCapabilities
 					};
 
 					if( typeof iconsMap[ light.modelId ] === 'string' ) {
@@ -360,10 +319,9 @@ class Driver {
 				}
 
 				callback( null, result );
-			})
-			.on('disconnect', () => {
-				connected = false;
-			})
+
+			}
+		});
 
 	}
 

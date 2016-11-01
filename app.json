@@ -51,9 +51,94 @@
 					"template": "add_devices"
 				}
 			]
+		},
+		{
+			"id": "dimmerswitch",
+			"name": {
+				"en": "Dimmer Switch",
+				"nl": "Dimmer Switch"
+			},
+			"class": "other",
+			"capabilities": [],
+			"images": {
+				"large": "drivers/dimmerswitch/assets/images/large.jpg",
+				"small": "drivers/dimmerswitch/assets/images/small.jpg"
+			},
+			"pair": [
+				{
+					"id": "select_bridge",
+					"navigation": {
+						"next": "press_button"
+					}
+				},
+				{
+					"id": "press_button"
+				},
+				{
+					"id": "list_devices",
+					"template": "list_devices",
+					"navigation": {
+						"next": "add_devices"
+					}
+				},
+				{
+					"id": "add_devices",
+					"template": "add_devices"
+				}
+			]
 		}
 	],
 	"flow": {
+		"triggers": [
+			{
+				"id": "dimmerswitch_button_pressed",
+				"title": {
+					"en": "A button is pressed",
+					"nl": "Een knop is ingedrukt"
+				},
+				"args": [
+					{
+						"name": "device",
+						"type": "device",
+						"filter": "driver_id=dimmerswitch"
+					},
+					{
+						"name": "button",
+						"type": "dropdown",
+						"values": [
+							{
+								"id": "on",
+								"label": {
+									"en": "On",
+									"nl": "Aan"
+								}
+							},
+							{
+								"id": "increase_brightness",
+								"label": {
+									"en": "Increase brightness",
+									"nl": "Verhoog helderheid"
+								}
+							},
+							{
+								"id": "decrease_brightness",
+								"label": {
+									"en": "Decrease brightness",
+									"nl": "Verlaag helderheid"
+								}
+							},
+							{
+								"id": "off",
+								"label": {
+									"en": "Off",
+									"nl": "Uit"
+								}
+							}
+						]
+					}
+				]
+			}
+		],
 		"actions": [
 			{
 				"id": "shortAlert",
