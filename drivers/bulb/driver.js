@@ -189,24 +189,18 @@ class Driver {
 		if( device instanceof Error )
 			return module.exports.setUnavailable( device_data, __('unreachable') );
 
-		if( device.reachable ) {
-			module.exports.setAvailable( device_data );
+		module.exports.setAvailable( device_data );
+		module.exports.getCapabilities( device_data, ( err, capabilities ) => {
+			if( err ) return this.error( err );
 
-			module.exports.getCapabilities( device_data, ( err, capabilities ) => {
-				if( err ) return this.error( err );
-
-				capabilities.forEach(( capabilityId ) => {
-					let value = device[ capabilityMap[ capabilityId ] ];
-					if( typeof value !== 'undefined' ) {
-						let convertedValue = this._convertValue( capabilityId, 'get', value );
-						module.exports.realtime( device_data, capabilityId, convertedValue );
-					}
-				});
-			})
-
-		} else {
-			module.exports.setUnavailable( device_data, __('unreachable') );
-		}
+			capabilities.forEach(( capabilityId ) => {
+				let value = device[ capabilityMap[ capabilityId ] ];
+				if( typeof value !== 'undefined' ) {
+					let convertedValue = this._convertValue( capabilityId, 'get', value );
+					module.exports.realtime( device_data, capabilityId, convertedValue );
+				}
+			});
+		})
 
 		setTimeout(() => {
 			this._syncDevice( device_data );
@@ -222,31 +216,43 @@ class Driver {
 		let device = bridge.getLight( device_data.id );
 		if( device instanceof Error ) return device;
 
-		device.bridge = bridge;
-		device.saveTimeout = undefined;
-		device.save = ( transitionTime, callback ) => {
+		device.bridge 				= device.bridge || bridge;
+		device.saveTimeout 			= device.saveTimeout || undefined;
+		device.saveTimeoutCallbacks = device.saveTimeoutCallbacks || [];
+		device.save 				= device.save || (( transitionTime, callback ) => {
 
 			if( typeof transitionTime === 'function' ) {
 				callback = transitionTime;
 				transitionTime = 0.5;
 			}
 
-			if( device.saveTimeout ) clearTimeout(device.saveTimeout);
+			device.saveTimeoutCallbacks.push( callback );
+
+			if( device.saveTimeout ) {
+				clearTimeout(device.saveTimeout);
+			}
 			device.saveTimeout = setTimeout(() => {
 
 				device.transitionTime = transitionTime;
 
 				return bridge.saveLight( device )
 					.then(( result ) => {
-						callback && callback( null, result );
+						device.saveTimeoutCallbacks.forEach(( callback ) => {
+							callback && callback( null, result );
+						});
 					})
 					.catch(( err ) => {
 						this.error( err );
-						callback && callback( err );
-					});
+						device.saveTimeoutCallbacks.forEach(( callback ) => {
+							callback && callback( err );
+						});
+					})
+					.then(() => {
+						device.saveTimeoutCallbacks = [];
+					})
 
 			}, 500);
-		}
+		})
 
 		return device;
 	}
