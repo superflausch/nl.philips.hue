@@ -3,10 +3,10 @@
 const sharedPair			= require('../_shared/pair.js');
 
 const buttonEventMap		= {
-	'1002': 'on',
-	'2002': 'increase_brightness',
-	'3002': 'decrease_brightness',
-	'4002': 'off'
+	'34': 'button1',
+	'16': 'button2',
+	'17': 'button3',
+	'18': 'button4'
 }
 
 class Driver {
@@ -23,7 +23,7 @@ class Driver {
 		this.deleted = this._onExportsDeleted.bind(this);
 		this.renamed = this._onExportsRenamed.bind(this);
 
-		Homey.manager('flow').on('trigger.dimmerswitch_button_pressed', this._onFlowTriggerDimmerSwitchButtonPressed.bind(this));
+		Homey.manager('flow').on('trigger.tap_button_pressed', this._onFlowTriggerTapButtonPressed.bind(this));
 
 	}
 
@@ -108,7 +108,7 @@ class Driver {
 			 && device.state.buttonEvent === this._devices[ device_data.id ].buttonEvent ) {
 				this._devices[ device_data.id ].lastUpdated = device.state.lastUpdated;
 
-				Homey.manager('flow').triggerDevice('dimmerswitch_button_pressed', null, {
+				Homey.manager('flow').triggerDevice('tap_button_pressed', null, {
 					button: buttonEventMap[ device.state.buttonEvent ]
 				}, device_data);
 
@@ -119,7 +119,7 @@ class Driver {
 				this._devices[ device_data.id ].buttonEvent = device.state.buttonEvent;
 				this._devices[ device_data.id ].lastUpdated = device.state.lastUpdated;
 
-				Homey.manager('flow').triggerDevice('dimmerswitch_button_pressed', null, {
+				Homey.manager('flow').triggerDevice('tap_button_pressed', null, {
 					button: buttonEventMap[ device.state.buttonEvent ]
 				}, device_data);
 
@@ -188,8 +188,7 @@ class Driver {
 
 				for( let sensor of state.bridge.getSensors() ) {
 
-					if( sensor.modelId !== 'RWL020'
-					 && sensor.modelId !== 'RWL021' ) continue;
+					if( sensor.modelId !== 'ZGPSWITCH' ) continue;
 
 					let deviceObj = {
 						name			: sensor.name,
@@ -210,7 +209,7 @@ class Driver {
 	/*
 		Flow methods
 	*/
-	_onFlowTriggerDimmerSwitchButtonPressed( callback, args, state ) {
+	_onFlowTriggerTapButtonPressed( callback, args, state ) {
 		callback( null, args.button === state.button );
 	}
 }

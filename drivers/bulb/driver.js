@@ -167,8 +167,11 @@ class Driver {
 				});
 			}
 		} else {
+
+			let bridge = this.getBridge( device_data );
+			if( bridge instanceof Error ) return this.error( bridge );
+
 			bridge.on('refresh', () => {
-				console.log('onRefresh')
 				this._syncDevice( device_data );
 			});
 		}
@@ -201,6 +204,13 @@ class Driver {
 				}
 			});
 		})
+
+	}
+
+	getBridge( device_data ) {
+
+		let bridge = Homey.app.getBridge( device_data.bridge_id );
+		if( bridge instanceof Error ) return bridge;
 
 	}
 
