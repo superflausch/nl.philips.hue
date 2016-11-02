@@ -2,7 +2,6 @@
 
 const sharedPair			= require('../_shared/pair.js');
 
-const pollInterval 			= 5000;
 const typeCapabilityMap 	= {
 	'on/off light'				: [ 'onoff' ],
 	'dimmable light'			: [ 'onoff', 'dim' ],
@@ -161,22 +160,23 @@ class Driver {
 		if( device instanceof Error ) {
 			if( device.message === 'invalid_bridge' || device.message === 'invalid_light' ) {
 				Homey.app.once('bridge_available', ( bridge ) => {
-					this._syncDevice( device_data );
+
+					bridge.on('refresh', () => {
+						this._syncDevice( device_data );
+					});
 				});
 			}
 		} else {
-			this._syncDevice( device_data );
+			bridge.on('refresh', () => {
+				console.log('onRefresh')
+				this._syncDevice( device_data );
+			});
 		}
 
 	}
 
 	_uninitDevice( device_data ) {
 		this.debug('_uninitDevice', device_data);
-
-		delete this._devices[ device_data.id ];
-
-		let device = this.getDevice( device_data );
-		if( device instanceof Error ) return device;
 
 		delete this._devices[ device_data.id ];
 
@@ -201,10 +201,6 @@ class Driver {
 				}
 			});
 		})
-
-		setTimeout(() => {
-			this._syncDevice( device_data );
-		}, pollInterval);
 
 	}
 

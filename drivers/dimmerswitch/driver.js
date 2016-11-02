@@ -65,22 +65,24 @@ class Driver {
 
 		let device = this.getDevice( device_data );
 		if( device instanceof Error ) {
-			if( device.message === 'invalid_bridge' || device.message === 'invalid_sensor' ) {
+			if( device.message === 'invalid_bridge' || device.message === 'invalid_light' ) {
 				Homey.app.once('bridge_available', ( bridge ) => {
-					this._syncDevice( device_data );
+
+					bridge.on('refresh', () => {
+						this._syncDevice( device_data );
+					});
 				});
 			}
 		} else {
-			this._syncDevice( device_data );
+			bridge.on('refresh', () => {
+				this._syncDevice( device_data );
+			});
 		}
 
 	}
 
 	_uninitDevice( device_data ) {
 		this.debug('_uninitDevice', device_data);
-
-		if( this._devices[ device_data.id ].syncTimeout )
-			clearTimeout( this._devices[ device_data.id ].syncTimeout );
 
 		delete this._devices[ device_data.id ];
 
@@ -121,10 +123,6 @@ class Driver {
 
 			}
 		}
-
-		this._devices[ device_data.id ].syncTimeout = setTimeout(() => {
-			this._syncDevice( device_data );
-		}, pollInterval);
 
 	}
 
