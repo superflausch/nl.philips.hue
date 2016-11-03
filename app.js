@@ -57,6 +57,7 @@ class App extends events.EventEmitter {
 			.on('bridge_available', () => {
 				this.emit('bridge_available', this._bridges[ bridge.id ] );
 			})
+			.init()
 	}
 
 	getBridges() {
