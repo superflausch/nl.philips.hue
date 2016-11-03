@@ -120,6 +120,28 @@ class DriverBulb extends Driver {
 
 	}
 
+	_syncDevice( device_data ) {
+		this.debug('_syncDevice', device_data.id);
+
+		let device = this.getDevice( device_data );
+		if( device instanceof Error )
+			return module.exports.setUnavailable( device_data, __('unreachable') );
+
+		module.exports.setAvailable( device_data );
+		module.exports.getCapabilities( device_data, ( err, capabilities ) => {
+			if( err ) return this.error( err );
+
+			capabilities.forEach(( capabilityId ) => {
+				let value = device[ capabilityMap[ capabilityId ] ];
+				if( typeof value !== 'undefined' ) {
+					let convertedValue = DriverBulb.convertValue( capabilityId, 'get', value );
+					module.exports.realtime( device_data, capabilityId, convertedValue );
+				}
+			});
+		})
+
+	}
+
 	_onExportsPairListDevices( state, data, callback ) {
 
 		if( !state.bridge )
