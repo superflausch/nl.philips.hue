@@ -1,6 +1,6 @@
 'use strict';
 
-const sharedPair			= require('../_shared/pair.js');
+const Driver	= require('../../lib/Driver.js');
 
 const buttonEventMap		= {
 	'1002': 'on',
@@ -9,84 +9,16 @@ const buttonEventMap		= {
 	'4002': 'off'
 }
 
-class Driver {
+class DriverDimmerSwitch extends Driver {
 
 	constructor() {
+		super();
 
-		this._debug = true;
+		this._deviceType = 'sensor';
 
-		this._devices = {};
-
-		this.init = this._onExportsInit.bind(this);
-		this.pair = this._onExportsPair.bind(this);
-		this.added = this._onExportsAdded.bind(this);
-		this.deleted = this._onExportsDeleted.bind(this);
-		this.renamed = this._onExportsRenamed.bind(this);
-
-		Homey.manager('flow').on('trigger.dimmerswitch_button_pressed', this._onFlowTriggerDimmerSwitchButtonPressed.bind(this));
-
-	}
-
-	/*
-		Helper methods
-	*/
-	debug() {
-		if( this._debug ) {
-			this.log.apply( this, arguments );
-		}
-	}
-
-	log() {
-		Homey.app.log.bind( Homey.app, '[dimmerswitch][log]' ).apply( Homey.app, arguments );
-	}
-
-	error() {
-		Homey.app.error.bind( Homey.app, '[dimmerswitch][error]' ).apply( Homey.app, arguments );
-	}
-
-	getDeviceData( bridge, sensor ) {
-		return {
-			id: sensor.uniqueId,
-			bridge_id: bridge.id
-		}
-	}
-
-	/*
-		Device methods
-	*/
-	_initDevice( device_data ) {
-		this.debug('_initDevice', device_data.id);
-
-		this._devices[ device_data.id ] = {
-			data: device_data
-		}
-
-		let device = this.getDevice( device_data );
-		if( device instanceof Error ) {
-			if( device.message === 'invalid_bridge' || device.message === 'invalid_light' ) {
-				Homey.app.once('bridge_available', ( bridge ) => {
-
-					bridge.on('refresh', () => {
-						this._syncDevice( device_data );
-					});
-				});
-			}
-		} else {
-
-			let bridge = this.getBridge( device_data );
-			if( bridge instanceof Error ) return this.error( bridge );
-
-			bridge.on('refresh', () => {
-				this._syncDevice( device_data );
-			});
-		}
-
-	}
-
-	_uninitDevice( device_data ) {
-		this.debug('_uninitDevice', device_data);
-
-		delete this._devices[ device_data.id ];
+		Homey
+			.manager('flow')
+			.on('trigger.dimmerswitch_button_pressed', this._onFlowTriggerDimmerSwitchButtonPressed.bind(this));
 
 	}
 
@@ -128,83 +60,31 @@ class Driver {
 
 	}
 
-	getBridge( device_data ) {
+	_onExportsPairListDevices( state, data, callback ) {
 
-		let bridge = Homey.app.getBridge( device_data.bridge_id );
-		if( bridge instanceof Error ) return bridge;
+		if( !state.bridge )
+			return callback( 'invalid_bridge' );
 
-	}
+		if( state.bridge instanceof Error )
+			return callback( state.bridge );
 
-	getDevice( device_data ) {
+		let result = [];
 
-		let bridge = Homey.app.getBridge( device_data.bridge_id );
-		if( bridge instanceof Error ) return bridge;
+		for( let sensor of state.bridge.getSensors() ) {
 
-		let device = bridge.getSensor( device_data.id );
-		if( device instanceof Error ) return device;
+			if( sensor.modelId !== 'RWL020'
+			 && sensor.modelId !== 'RWL021' ) continue;
 
-		return device;
-	}
+			let deviceObj = {
+				name			: sensor.name,
+				data 			: this.getDeviceData( state.bridge, sensor )
+			};
 
-	/*
-		Exports methods
-	*/
-	_onExportsInit( devices_data, callback ) {
-		this.debug( '_onExportsInit', devices_data );
+			result.push( deviceObj );
 
-		devices_data.forEach( this._initDevice.bind(this) );
+		}
 
-		callback();
-
-	}
-
-	_onExportsAdded( device_data ) {
-		this.debug( '_onExportsAdded', device_data );
-		this._initDevice( device_data );
-	}
-
-	_onExportsDeleted( device_data ) {
-		this.debug( '_onExportsDeleted', device_data );
-		this._uninitDevice( device_data );
-	}
-
-	_onExportsRenamed( device_data ) {
-		this.debug( '_onExportsRenamed', device_data );
-	}
-
-	_onExportsPair( socket ) {
-		this.debug('_onExportsPair');
-
-		sharedPair( socket, {
-			'list_devices': ( state, data, callback ) => {
-
-				if( !state.bridge )
-					return callback( 'invalid_bridge' );
-
-				if( state.bridge instanceof Error )
-					return callback( state.bridge );
-
-				let result = [];
-
-				for( let sensor of state.bridge.getSensors() ) {
-
-					if( sensor.modelId !== 'RWL020'
-					 && sensor.modelId !== 'RWL021' ) continue;
-
-					let deviceObj = {
-						name			: sensor.name,
-						data 			: this.getDeviceData( state.bridge, sensor )
-					};
-
-					result.push( deviceObj );
-
-				}
-
-				callback( null, result );
-
-			}
-		});
-
+		callback( null, result );
 	}
 
 	/*
@@ -215,4 +95,4 @@ class Driver {
 	}
 }
 
-module.exports = new Driver();
+module.exports = new DriverDimmerSwitch();

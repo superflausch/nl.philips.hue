@@ -294,7 +294,7 @@
 					{
 						"name": "device",
 						"type": "device",
-						"filter": "driver_id=bulb"
+						"filter": "driver_id=bulb&capabilities=light_hue"
 					}
 				]
 			},
@@ -308,7 +308,7 @@
 					{
 						"name": "device",
 						"type": "device",
-						"filter": "driver_id=bulb"
+						"filter": "driver_id=bulb&capabilities=light_hue"
 					}
 				]
 			},
@@ -322,7 +322,7 @@
 					{
 						"name": "device",
 						"type": "device",
-						"filter": "driver_id=bulb"
+						"filter": "driver_id=bulb&capabilities=light_hue"
 					}
 				]
 			},

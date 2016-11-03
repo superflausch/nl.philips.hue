@@ -21,13 +21,12 @@
 <div id="press-button-image"></div>
 
 <script type="text/javascript">
-Homey.setTitle( __('pair.press_button.title') );
-
 Homey.emit('press_button', {
 	bridgeId: window.hue_bridgeId
 }, function( err, authenticated ){
 	if( err ) return Homey.alert( err, 'error' );
 	if( authenticated === true ) return Homey.showView('list_devices');
+	Homey.setTitle( __('pair.press_button.title') );
 	$('#press-button-image').show();
 });
 

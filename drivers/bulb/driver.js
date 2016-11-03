@@ -1,6 +1,6 @@
 'use strict';
 
-const sharedPair			= require('../_shared/pair.js');
+const Driver	= require('../../lib/Driver.js');
 
 const typeCapabilityMap 	= {
 	'on/off light'				: [ 'onoff' ],
@@ -43,19 +43,15 @@ const capabilityMap			= {
 	'light_mode'		: 'colorMode'
 }
 
-class Driver {
+class DriverBulb extends Driver {
 
 	constructor() {
+		super();
 
-		this._debug = true;
-
-		this._devices = {};
-
-		this.init = this._onExportsInit.bind(this);
-		this.pair = this._onExportsPair.bind(this);
-		this.added = this._onExportsAdded.bind(this);
-		this.deleted = this._onExportsDeleted.bind(this);
-		this.renamed = this._onExportsRenamed.bind(this);
+		this._deviceType = 'light';
+		this._defaultSaveOpts = {
+			transitionTime: 0.5
+		};
 
 		this.capabilities = {};
 
@@ -83,40 +79,18 @@ class Driver {
 		this.capabilities.light_mode.get = this._onExportsCapabilitiesLightModeGet.bind(this);
 		this.capabilities.light_mode.set = this._onExportsCapabilitiesLightModeSet.bind(this);
 
-		Homey.manager('flow').on('action.shortAlert', this._onFlowActionShortAlert.bind(this));
-		Homey.manager('flow').on('action.longAlert', this._onFlowActionLongAlert.bind(this));
-		Homey.manager('flow').on('action.startColorLoop', this._onFlowActionStartColorLoop.bind(this));
-		Homey.manager('flow').on('action.stopColorLoop', this._onFlowActionStopColorLoop.bind(this));
-		Homey.manager('flow').on('action.setRandomColor', this._onFlowActionSetRandomColor.bind(this));
-		Homey.manager('flow').on('action.brightnessIncrement', this._onFlowActionBrightnessIncrement.bind(this));
+		Homey
+			.manager('flow')
+			.on('action.shortAlert', this._onFlowActionShortAlert.bind(this))
+			.on('action.longAlert', this._onFlowActionLongAlert.bind(this))
+			.on('action.startColorLoop', this._onFlowActionStartColorLoop.bind(this))
+			.on('action.stopColorLoop', this._onFlowActionStopColorLoop.bind(this))
+			.on('action.setRandomColor', this._onFlowActionSetRandomColor.bind(this))
+			.on('action.brightnessIncrement', this._onFlowActionBrightnessIncrement.bind(this))
 
 	}
 
-	/*
-		Helper methods
-	*/
-	debug() {
-		if( this._debug ) {
-			this.log.apply( this, arguments );
-		}
-	}
-
-	log() {
-		Homey.app.log.bind( Homey.app, '[bulb][log]' ).apply( Homey.app, arguments );
-	}
-
-	error() {
-		Homey.app.error.bind( Homey.app, '[bulb][error]' ).apply( Homey.app, arguments );
-	}
-
-	getDeviceData( bridge, light ) {
-		return {
-			id: light.uniqueId,
-			bridge_id: bridge.id
-		}
-	}
-
-	_convertValue( capabilityId, direction, value ) {
+	static convertValue( capabilityId, direction, value ) {
 
 		if( capabilityId === 'dim' || capabilityId === 'light_saturation'  ) {
 			if( direction === 'get' ) {
@@ -146,188 +120,36 @@ class Driver {
 
 	}
 
-	/*
-		Device methods
-	*/
-	_initDevice( device_data ) {
-		this.debug('_initDevice', device_data.id);
+	_onExportsPairListDevices( state, data, callback ) {
 
-		this._devices[ device_data.id ] = device_data;
+		if( !state.bridge )
+			return callback( 'invalid_bridge' );
 
-		module.exports.setUnavailable( device_data, __('unreachable') );
+		if( state.bridge instanceof Error )
+			return callback( state.bridge );
 
-		let device = this.getDevice( device_data );
-		if( device instanceof Error ) {
-			if( device.message === 'invalid_bridge' || device.message === 'invalid_light' ) {
-				Homey.app.once('bridge_available', ( bridge ) => {
+		let result = [];
 
-					bridge.on('refresh', () => {
-						this._syncDevice( device_data );
-					});
-				});
+		for( let light of state.bridge.getLights() ) {
+
+			let deviceCapabilities = typeCapabilityMap[ light.type.toLowerCase() ];
+			if( !Array.isArray( deviceCapabilities ) ) return;
+
+			let deviceObj = {
+				name			: light.name,
+				data 			: this.getDeviceData( state.bridge, light ),
+				capabilities	: deviceCapabilities
+			};
+
+			if( typeof iconsMap[ light.modelId ] === 'string' ) {
+				deviceObj.icon = `/icons/${iconsMap[light.modelId]}.svg`;
 			}
-		} else {
 
-			let bridge = this.getBridge( device_data );
-			if( bridge instanceof Error ) return this.error( bridge );
+			result.push( deviceObj );
 
-			bridge.on('refresh', () => {
-				this._syncDevice( device_data );
-			});
 		}
 
-	}
-
-	_uninitDevice( device_data ) {
-		this.debug('_uninitDevice', device_data);
-
-		delete this._devices[ device_data.id ];
-
-	}
-
-	_syncDevice( device_data ) {
-		this.debug('_syncDevice', device_data.id);
-
-		let device = this.getDevice( device_data );
-		if( device instanceof Error )
-			return module.exports.setUnavailable( device_data, __('unreachable') );
-
-		module.exports.setAvailable( device_data );
-		module.exports.getCapabilities( device_data, ( err, capabilities ) => {
-			if( err ) return this.error( err );
-
-			capabilities.forEach(( capabilityId ) => {
-				let value = device[ capabilityMap[ capabilityId ] ];
-				if( typeof value !== 'undefined' ) {
-					let convertedValue = this._convertValue( capabilityId, 'get', value );
-					module.exports.realtime( device_data, capabilityId, convertedValue );
-				}
-			});
-		})
-
-	}
-
-	getBridge( device_data ) {
-
-		let bridge = Homey.app.getBridge( device_data.bridge_id );
-		if( bridge instanceof Error ) return bridge;
-
-	}
-
-	getDevice( device_data ) {
-
-		let bridge = Homey.app.getBridge( device_data.bridge_id );
-		if( bridge instanceof Error ) return bridge;
-
-		let device = bridge.getLight( device_data.id );
-		if( device instanceof Error ) return device;
-
-		device.bridge 				= device.bridge || bridge;
-		device.saveTimeout 			= device.saveTimeout || undefined;
-		device.saveTimeoutCallbacks = device.saveTimeoutCallbacks || [];
-		device.save 				= device.save || (( transitionTime, callback ) => {
-
-			if( typeof transitionTime === 'function' ) {
-				callback = transitionTime;
-				transitionTime = 0.5;
-			}
-
-			device.saveTimeoutCallbacks.push( callback );
-
-			if( device.saveTimeout ) {
-				clearTimeout(device.saveTimeout);
-			}
-			device.saveTimeout = setTimeout(() => {
-
-				device.transitionTime = transitionTime;
-
-				return bridge.saveLight( device )
-					.then(( result ) => {
-						device.saveTimeoutCallbacks.forEach(( callback ) => {
-							callback && callback( null, result );
-						});
-					})
-					.catch(( err ) => {
-						this.error( err );
-						device.saveTimeoutCallbacks.forEach(( callback ) => {
-							callback && callback( err );
-						});
-					})
-					.then(() => {
-						device.saveTimeoutCallbacks = [];
-					})
-
-			}, 500);
-		})
-
-		return device;
-	}
-
-	/*
-		Exports methods
-	*/
-	_onExportsInit( devices_data, callback ) {
-		this.debug( '_onExportsInit', devices_data );
-
-		devices_data.forEach( this._initDevice.bind(this) );
-
-		callback();
-
-	}
-
-	_onExportsAdded( device_data ) {
-		this.debug( '_onExportsAdded', device_data );
-		this._initDevice( device_data );
-	}
-
-	_onExportsDeleted( device_data ) {
-		this.debug( '_onExportsDeleted', device_data );
-		this._uninitDevice( device_data );
-	}
-
-	_onExportsRenamed( device_data ) {
-		this.debug( '_onExportsRenamed', device_data );
-
-		// TODO
-	}
-
-	_onExportsPair( socket ) {
-		this.debug('_onExportsPair');
-
-		sharedPair( socket, {
-			'list_devices': ( state, data, callback ) => {
-
-				if( !state.bridge )
-					return callback( 'invalid_bridge' );
-
-				if( state.bridge instanceof Error )
-					return callback( state.bridge );
-
-				let result = [];
-
-				for( let light of state.bridge.getLights() ) {
-
-					let deviceCapabilities = typeCapabilityMap[ light.type.toLowerCase() ];
-					if( !Array.isArray( deviceCapabilities ) ) return;
-
-					let deviceObj = {
-						name			: light.name,
-						data 			: this.getDeviceData( state.bridge, light ),
-						capabilities	: deviceCapabilities
-					};
-
-					if( typeof iconsMap[ light.modelId ] === 'string' ) {
-						deviceObj.icon = `/icons/${iconsMap[light.modelId]}.svg`;
-					}
-
-					result.push( deviceObj );
-
-				}
-
-				callback( null, result );
-
-			}
-		});
+		callback( null, result );
 
 	}
 
@@ -337,7 +159,7 @@ class Driver {
 		let device = this.getDevice( device_data );
 		if( device instanceof Error ) return callback( device );
 
-		callback( null, this._convertValue( 'onoff', 'get', device[ capabilityMap['onoff'] ] ) );
+		callback( null, DriverBulb.convertValue( 'onoff', 'get', device[ capabilityMap['onoff'] ] ) );
 	}
 
 	// onoff
@@ -347,7 +169,7 @@ class Driver {
 		let device = this.getDevice( device_data );
 		if( device instanceof Error ) return callback( device );
 
-		device[ capabilityMap['onoff'] ] = this._convertValue( 'onoff', 'set', value );
+		device[ capabilityMap['onoff'] ] = DriverBulb.convertValue( 'onoff', 'set', value );
 		device.save( callback );
 	}
 
@@ -358,22 +180,22 @@ class Driver {
 		let device = this.getDevice( device_data );
 		if( device instanceof Error ) return callback( device );
 
-		callback( null, this._convertValue( 'dim', 'get', device[ capabilityMap['dim'] ] ) );
+		callback( null, DriverBulb.convertValue( 'dim', 'get', device[ capabilityMap['dim'] ] ) );
 	}
 
-	_onExportsCapabilitiesDimSet( device_data, value, callback, transitionTime ) {
+	_onExportsCapabilitiesDimSet( device_data, value, callback, saveOpts ) {
 		this.debug('_onExportsCapabilitiesDimSet', device_data.id, value);
 
 		let device = this.getDevice( device_data );
 		if( device instanceof Error ) return callback( device );
 
-		device[ capabilityMap['dim'] ] = this._convertValue( 'dim', 'set', value );
+		device[ capabilityMap['dim'] ] = DriverBulb.convertValue( 'dim', 'set', value );
 
-		device[ capabilityMap['onoff'] ] = this._convertValue( 'onoff', 'set', value > 0 );
+		device[ capabilityMap['onoff'] ] = DriverBulb.convertValue( 'onoff', 'set', value > 0 );
 		module.exports.realtime( device_data, 'onoff', device[ capabilityMap['onoff'] ] );
 
-		if( typeof transitionTime === 'number' ) {
-			device.save( transitionTime, callback );
+		if( typeof saveOpts !== 'undefined' ) {
+			device.save( saveOpts, callback );
 		} else {
 			device.save( callback );
 		}
@@ -386,7 +208,7 @@ class Driver {
 		let device = this.getDevice( device_data );
 		if( device instanceof Error ) return callback( device );
 
-		callback( null, this._convertValue( 'light_hue', 'get', device[ capabilityMap['light_hue'] ] ) );
+		callback( null, DriverBulb.convertValue( 'light_hue', 'get', device[ capabilityMap['light_hue'] ] ) );
 	}
 
 	_onExportsCapabilitiesLightHueSet( device_data, value, callback ) {
@@ -395,7 +217,7 @@ class Driver {
 		let device = this.getDevice( device_data );
 		if( device instanceof Error ) return callback( device );
 
-		device[ capabilityMap['light_hue'] ] = this._convertValue( 'light_hue', 'set', value );
+		device[ capabilityMap['light_hue'] ] = DriverBulb.convertValue( 'light_hue', 'set', value );
 		device.save( callback );
 
 		module.exports.realtime( device_data, 'light_mode', 'color' );
@@ -408,7 +230,7 @@ class Driver {
 		let device = this.getDevice( device_data );
 		if( device instanceof Error ) return callback( device );
 
-		callback( null, this._convertValue( 'light_saturation', 'get', device[ capabilityMap['light_saturation'] ] ) );
+		callback( null, DriverBulb.convertValue( 'light_saturation', 'get', device[ capabilityMap['light_saturation'] ] ) );
 	}
 
 	_onExportsCapabilitiesLightSaturationSet( device_data, value, callback ) {
@@ -417,7 +239,7 @@ class Driver {
 		let device = this.getDevice( device_data );
 		if( device instanceof Error ) return callback( device );
 
-		device[ capabilityMap['light_saturation'] ] = this._convertValue( 'light_saturation', 'set', value );
+		device[ capabilityMap['light_saturation'] ] = DriverBulb.convertValue( 'light_saturation', 'set', value );
 		device.save( callback );
 
 		module.exports.realtime( device_data, 'light_mode', 'color' );
@@ -430,7 +252,7 @@ class Driver {
 		let device = this.getDevice( device_data );
 		if( device instanceof Error ) return callback( device );
 
-		callback( null, this._convertValue( 'temperature', 'get', device[ capabilityMap['light_temperature'] ] ) );
+		callback( null, DriverBulb.convertValue( 'temperature', 'get', device[ capabilityMap['light_temperature'] ] ) );
 	}
 
 	_onExportsCapabilitiesLightTemperatureSet( device_data, value, callback ) {
@@ -439,7 +261,7 @@ class Driver {
 		let device = this.getDevice( device_data );
 		if( device instanceof Error ) return callback( device );
 
-		device[ capabilityMap['light_temperature'] ] = this._convertValue( 'light_temperature', 'set', value );
+		device[ capabilityMap['light_temperature'] ] = DriverBulb.convertValue( 'light_temperature', 'set', value );
 		device.save( callback );
 
 		module.exports.realtime( device_data, 'light_mode', 'temperature' );
@@ -452,7 +274,7 @@ class Driver {
 		let device = this.getDevice( device_data );
 		if( device instanceof Error ) return callback( device );
 
-		callback( null, this._convertValue( 'light_mode', 'get', device[ capabilityMap['light_mode'] ] ) );
+		callback( null, DriverBulb.convertValue( 'light_mode', 'get', device[ capabilityMap['light_mode'] ] ) );
 	}
 
 	_onExportsCapabilitiesLightModeSet( device_data, value, callback ) {
@@ -531,20 +353,24 @@ class Driver {
 		var hue = Math.random();
 		var saturation = 1;
 
+		module.exports.realtime( args.device, 'onoff', true );
 		module.exports.realtime( args.device, 'light_hue', hue );
 		module.exports.realtime( args.device, 'light_saturation', saturation );
 
-		device[ capabilityMap['light_hue'] ] = this._convertValue( 'light_hue', 'set', hue );
-		device[ capabilityMap['light_saturation'] ] = this._convertValue( 'light_saturation', 'set', saturation );
+		device[ capabilityMap['onoff'] ] = DriverBulb.convertValue( 'onoff', 'set', true );
+		device[ capabilityMap['light_hue'] ] = DriverBulb.convertValue( 'light_hue', 'set', hue );
+		device[ capabilityMap['light_saturation'] ] = DriverBulb.convertValue( 'light_saturation', 'set', saturation );
 
 		device.save( callback );
 
 	}
 
 	_onFlowActionBrightnessIncrement( callback, args, state ) {
-		this._onExportsCapabilitiesDimSet( args.device, args.brightness/100, callback, args.trans )
+		this._onExportsCapabilitiesDimSet( args.device, args.brightness/100, callback, {
+			transitionTime: args.trans
+		})
 	}
 
 }
 
-module.exports = new Driver();
+module.exports = new DriverBulb();
