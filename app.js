@@ -45,6 +45,8 @@ class App extends events.EventEmitter {
 
 	_initBridge( bridge ) {
 
+		bridge.id = bridge.id.toLowerCase();
+
 		// skip if already found
 		if( this._bridges[ bridge.id ] instanceof Bridge ) return;
 
@@ -65,7 +67,7 @@ class App extends events.EventEmitter {
 	}
 
 	getBridge( bridgeId ) {
-		return this._bridges[ bridgeId ] || new Error('invalid_bridge');
+		return this._bridges[ bridgeId.toLowerCase() ] || new Error('invalid_bridge');
 	}
 
 	/*
