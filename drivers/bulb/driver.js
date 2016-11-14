@@ -192,6 +192,7 @@ class DriverBulb extends Driver {
 		if( device instanceof Error ) return callback( device );
 
 		device[ capabilityMap['onoff'] ] = DriverBulb.convertValue( 'onoff', 'set', value );
+		device[ capabilityMap['dim'] ] = device[ capabilityMap['dim'] ]; // see https://github.com/sqmk/huejay/issues/70
 		device.save( callback );
 	}
 

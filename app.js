@@ -4,6 +4,8 @@ const events		= require('events');
 const huejay 		= require('huejay');
 const Bridge		= require('./lib/Bridge.js');
 
+const findBridgesInterval = 60000;
+
 class App extends events.EventEmitter {
 
 	constructor() {
@@ -24,11 +26,11 @@ class App extends events.EventEmitter {
 		Helper methods
 	*/
 	log() {
-		console.log.apply( this, arguments );
+		console.log.bind(this, '[log]' ).apply( this, arguments );
 	}
 
 	error() {
-		console.error.apply( this, arguments );
+		console.error.bind( this, '[error]' ).apply( this, arguments );
 	}
 
 	/*
@@ -36,10 +38,18 @@ class App extends events.EventEmitter {
 	*/
 	findBridges() {
 
-		huejay.discover({strategy: 'all'})
-			.then(( bridges ) => {
-				bridges.forEach( this._initBridge.bind(this) );
-			});
+		[ 'nupnp', 'upnp' ].forEach(( strategy ) => {
+			huejay.discover({
+				strategy: strategy
+			})
+				.then(( bridges ) => {
+					this.log(`Discovered ${bridges.length} ${strategy} bridges`);
+					bridges.forEach( this._initBridge.bind(this) );
+				})
+				.catch(( err ) => {
+					this.error( err );
+				})
+		});
 
 	}
 
@@ -76,7 +86,7 @@ class App extends events.EventEmitter {
 		console.log(`${Homey.manifest.id} running...`);
 
 		this.findBridges();
-		setInterval( this.findBridges.bind(this), 60000 );
+		setInterval( this.findBridges.bind(this), findBridgesInterval );
 
 	}
 
