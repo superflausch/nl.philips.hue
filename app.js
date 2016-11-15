@@ -77,6 +77,7 @@ class App extends events.EventEmitter {
 	}
 
 	getBridge( bridgeId ) {
+		if( typeof bridgeId !== 'string' ) return new Error('invalid_bridge');
 		return this._bridges[ bridgeId.toLowerCase() ] || new Error('invalid_bridge');
 	}
 
