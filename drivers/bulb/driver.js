@@ -43,15 +43,14 @@ const capabilityMap			= {
 	'light_mode'		: 'colorMode'
 }
 
+const defaultTransitionTime = 0.5;
+
 class DriverBulb extends Driver {
 
 	constructor() {
 		super();
 
 		this._deviceType = 'light';
-		this._defaultSaveOpts = {
-			transitionTime: 0.5
-		};
 
 		this.capabilities = {};
 
@@ -127,18 +126,61 @@ class DriverBulb extends Driver {
 		if( device instanceof Error )
 			return module.exports.setUnavailable( device_data, __('unreachable') );
 
-		module.exports.setAvailable( device_data );
-		module.exports.getCapabilities( device_data, ( err, capabilities ) => {
-			if( err ) return this.error( err );
+		let deviceInstance = this.getDeviceInstance( device_data );
+		if( deviceInstance instanceof Error )
+			return module.exports.setUnavailable( device_data, __('unreachable') );
 
-			capabilities.forEach(( capabilityId ) => {
-				let value = device[ capabilityMap[ capabilityId ] ];
-				if( typeof value !== 'undefined' ) {
-					let convertedValue = DriverBulb.convertValue( capabilityId, 'get', value );
-					module.exports.realtime( device_data, capabilityId, convertedValue );
+		module.exports.setAvailable( device_data );
+
+		// sync values to internal state
+		for( let capabilityId in device.state ) {
+
+			// prevent dim from going to 0 if device is off
+			if( capabilityId === 'dim' && device.state['onoff'] === false ) continue;
+
+			let value = deviceInstance[ capabilityMap[ capabilityId ] ];
+			if( typeof value !== 'undefined' ) {
+				let convertedValue = DriverBulb.convertValue( capabilityId, 'get', value );
+				device.state[ capabilityId ] = convertedValue;
+				module.exports.realtime( device_data, capabilityId, device.state[ capabilityId ] );
+			}
+		}
+
+	}
+
+	_onBeforeSave( device_data ) {
+
+		let device = this.getDevice( device_data );
+		if( device instanceof Error ) return this.error( device );
+
+		let deviceInstance = this.getDeviceInstance( device_data );
+		if( deviceInstance instanceof Error ) return this.error( deviceInstance );
+
+		for( let capabilityId in device.state ) {
+
+			// light_mode is not setable
+			if( capabilityId === 'light_mode' ) continue;
+
+			// skip null values
+			let value = device.state[ capabilityId ];
+			if( value === null ) continue;
+
+			// only set properties that belong to the right light_mode, this enables switching of light_mode
+			if( typeof device.state.light_mode === 'string' ) {
+
+				if( device.state.light_mode === 'color' ) {
+					if( capabilityId === 'light_temperature' ) continue;
+				} else if( device.state.light_mode === 'temperature' ) {
+					if( capabilityId === 'light_hue' || capabilityId === 'light_saturation' ) continue;
 				}
-			});
-		})
+
+			}
+
+			let convertedValue = DriverBulb.convertValue( capabilityId, 'set', value );
+			deviceInstance[ capabilityMap[ capabilityId] ] = convertedValue;
+		}
+
+		deviceInstance['transitionTime'] = defaultTransitionTime;
 
 	}
 
@@ -181,7 +223,7 @@ class DriverBulb extends Driver {
 		let device = this.getDevice( device_data );
 		if( device instanceof Error ) return callback( device );
 
-		callback( null, DriverBulb.convertValue( 'onoff', 'get', device[ capabilityMap['onoff'] ] ) );
+		callback( null, device.state.onoff );
 	}
 
 	// onoff
@@ -191,8 +233,9 @@ class DriverBulb extends Driver {
 		let device = this.getDevice( device_data );
 		if( device instanceof Error ) return callback( device );
 
-		device[ capabilityMap['onoff'] ] = DriverBulb.convertValue( 'onoff', 'set', value );
-		device[ capabilityMap['dim'] ] = device[ capabilityMap['dim'] ]; // see https://github.com/sqmk/huejay/issues/70
+		device.state.onoff = value;
+
+		device.setInstanceProperty('effect', 'none');
 		device.save( callback );
 	}
 
@@ -203,25 +246,21 @@ class DriverBulb extends Driver {
 		let device = this.getDevice( device_data );
 		if( device instanceof Error ) return callback( device );
 
-		callback( null, DriverBulb.convertValue( 'dim', 'get', device[ capabilityMap['dim'] ] ) );
+		callback( null, device.state.dim );
 	}
 
-	_onExportsCapabilitiesDimSet( device_data, value, callback, saveOpts ) {
+	_onExportsCapabilitiesDimSet( device_data, value, callback ) {
 		this.debug('_onExportsCapabilitiesDimSet', device_data.id, value);
 
 		let device = this.getDevice( device_data );
 		if( device instanceof Error ) return callback( device );
 
-		device[ capabilityMap['dim'] ] = DriverBulb.convertValue( 'dim', 'set', value );
+		device.state.dim = value;
+		device.state.onoff = ( value > 0 );
+		module.exports.realtime( device_data, 'onoff', device.state.onoff );
 
-		device[ capabilityMap['onoff'] ] = DriverBulb.convertValue( 'onoff', 'set', value > 0 );
-		module.exports.realtime( device_data, 'onoff', device[ capabilityMap['onoff'] ] );
-
-		if( typeof saveOpts !== 'undefined' ) {
-			device.save( saveOpts, callback );
-		} else {
-			device.save( callback );
-		}
+		device.setInstanceProperty('effect', 'none');
+		device.save( callback );
 	}
 
 	// light_hue
@@ -231,7 +270,7 @@ class DriverBulb extends Driver {
 		let device = this.getDevice( device_data );
 		if( device instanceof Error ) return callback( device );
 
-		callback( null, DriverBulb.convertValue( 'light_hue', 'get', device[ capabilityMap['light_hue'] ] ) );
+		callback( null, device.state.light_hue );
 	}
 
 	_onExportsCapabilitiesLightHueSet( device_data, value, callback ) {
@@ -240,10 +279,16 @@ class DriverBulb extends Driver {
 		let device = this.getDevice( device_data );
 		if( device instanceof Error ) return callback( device );
 
-		device[ capabilityMap['light_hue'] ] = DriverBulb.convertValue( 'light_hue', 'set', value );
+		device.state.light_hue = value;
+
+		if( typeof device.state.light_mode !== 'undefined' ) {
+			device.state.light_mode = 'color';
+			module.exports.realtime( device_data, 'light_mode', device.state.light_mode );
+		}
+
+		device.setInstanceProperty('effect', 'none');
 		device.save( callback );
 
-		module.exports.realtime( device_data, 'light_mode', 'color' );
 	}
 
 	// light_saturation
@@ -253,7 +298,7 @@ class DriverBulb extends Driver {
 		let device = this.getDevice( device_data );
 		if( device instanceof Error ) return callback( device );
 
-		callback( null, DriverBulb.convertValue( 'light_saturation', 'get', device[ capabilityMap['light_saturation'] ] ) );
+		callback( null, device.state.light_saturation );
 	}
 
 	_onExportsCapabilitiesLightSaturationSet( device_data, value, callback ) {
@@ -262,10 +307,15 @@ class DriverBulb extends Driver {
 		let device = this.getDevice( device_data );
 		if( device instanceof Error ) return callback( device );
 
-		device[ capabilityMap['light_saturation'] ] = DriverBulb.convertValue( 'light_saturation', 'set', value );
-		device.save( callback );
+		device.state.light_saturation = value;
 
-		module.exports.realtime( device_data, 'light_mode', 'color' );
+		if( typeof device.state.light_mode !== 'undefined' ) {
+			device.state.light_mode = 'color';
+			module.exports.realtime( device_data, 'light_mode', device.state.light_mode );
+		}
+
+		device.setInstanceProperty('effect', 'none');
+		device.save( callback );
 	}
 
 	// light_temperature
@@ -275,7 +325,7 @@ class DriverBulb extends Driver {
 		let device = this.getDevice( device_data );
 		if( device instanceof Error ) return callback( device );
 
-		callback( null, DriverBulb.convertValue( 'temperature', 'get', device[ capabilityMap['light_temperature'] ] ) );
+		callback( null, device.state.light_temperature );
 	}
 
 	_onExportsCapabilitiesLightTemperatureSet( device_data, value, callback ) {
@@ -284,10 +334,15 @@ class DriverBulb extends Driver {
 		let device = this.getDevice( device_data );
 		if( device instanceof Error ) return callback( device );
 
-		device[ capabilityMap['light_temperature'] ] = DriverBulb.convertValue( 'light_temperature', 'set', value );
-		device.save( callback );
+		device.state.light_temperature = value;
 
-		module.exports.realtime( device_data, 'light_mode', 'temperature' );
+		if( typeof device.state.light_mode !== 'undefined' ) {
+			device.state.light_mode = 'temperature';
+			module.exports.realtime( device_data, 'light_mode', device.state.light_mode );
+		}
+
+		device.setInstanceProperty('effect', 'none');
+		device.save( callback );
 	}
 
 	// light_mode
@@ -297,7 +352,7 @@ class DriverBulb extends Driver {
 		let device = this.getDevice( device_data );
 		if( device instanceof Error ) return callback( device );
 
-		callback( null, DriverBulb.convertValue( 'light_mode', 'get', device[ capabilityMap['light_mode'] ] ) );
+		callback( null, device.state.light_mode );
 	}
 
 	_onExportsCapabilitiesLightModeSet( device_data, value, callback ) {
@@ -306,23 +361,8 @@ class DriverBulb extends Driver {
 		let device = this.getDevice( device_data );
 		if( device instanceof Error ) return callback( device );
 
-		if( value === 'color' ) {
-			if( device[ capabilityMap['light_hue'] ] === 65535 ) {
-				device[ capabilityMap['light_hue'] ]--;
-			} else {
-				device[ capabilityMap['light_hue'] ]++;
-			}
-			device.save( callback );
-		} else if( value === 'temperature' ) {
-			if( device[ capabilityMap['light_temperature'] ] === 500 ) {
-				device[ capabilityMap['light_temperature'] ]--;
-			} else {
-				device[ capabilityMap['light_temperature'] ]++;
-			}
-			device.save( callback );
-		} else {
-			callback( new Error('invalid_mode') );
-		}
+		device.state.light_mode = value;
+		device.save( callback );
 	}
 
 	/*
@@ -333,7 +373,8 @@ class DriverBulb extends Driver {
 		let device = this.getDevice( args.device );
 		if( device instanceof Error ) return callback( device );
 
-		device.alert = 'select';
+		device.setInstanceProperty('alert', 'select');
+		device.setInstanceProperty('effect', 'none');
 		device.save( callback );
 
 	}
@@ -343,7 +384,8 @@ class DriverBulb extends Driver {
 		let device = this.getDevice( args.device );
 		if( device instanceof Error ) return callback( device );
 
-		device.alert = 'lselect';
+		device.setInstanceProperty('alert', 'lselect');
+		device.setInstanceProperty('effect', 'none');
 		device.save( callback );
 
 	}
@@ -353,7 +395,8 @@ class DriverBulb extends Driver {
 		let device = this.getDevice( args.device );
 		if( device instanceof Error ) return callback( device );
 
-		device.effect = 'colorloop';
+		device.setInstanceProperty('alert', 'none');
+		device.setInstanceProperty('effect', 'colorloop');
 		device.save( callback );
 
 	}
@@ -363,7 +406,8 @@ class DriverBulb extends Driver {
 		let device = this.getDevice( args.device );
 		if( device instanceof Error ) return callback( device );
 
-		device.effect = 'none';
+		device.setInstanceProperty('alert', 'none');
+		device.setInstanceProperty('effect', 'none');
 		device.save( callback );
 
 	}
@@ -384,14 +428,19 @@ class DriverBulb extends Driver {
 		device[ capabilityMap['light_hue'] ] = DriverBulb.convertValue( 'light_hue', 'set', hue );
 		device[ capabilityMap['light_saturation'] ] = DriverBulb.convertValue( 'light_saturation', 'set', saturation );
 
+		device.setInstanceProperty('effect', 'none');
 		device.save( callback );
 
 	}
 
 	_onFlowActionBrightnessIncrement( callback, args, state ) {
-		this._onExportsCapabilitiesDimSet( args.device, args.brightness/100, callback, {
-			transitionTime: args.trans
-		})
+
+		let device = this.getDevice( args.device );
+		if( device instanceof Error ) return callback( device );
+
+		device.setInstanceProperty('transitionTime', args.trans);
+
+		this._onExportsCapabilitiesDimSet( args.device, args.brightness/100, callback );
 	}
 
 }
