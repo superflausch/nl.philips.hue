@@ -25,34 +25,36 @@ class DriverTap extends Driver {
 	_syncDevice( device_data ) {
 		this.debug('_syncDevice', device_data.id);
 
-		let device = this.getDevice( device_data );
-		if( device instanceof Error )
+		let deviceInstance = this.getDeviceInstance( device_data );
+		if( deviceInstance instanceof Error )
 			return module.exports.setUnavailable( device_data, __('unreachable') );
+
+		module.exports.setAvailable( device_data );
 
 		// if button changed, but not first time
 		if( typeof this._devices[ device_data.id ].buttonEvent === 'undefined' ) {
-			this._devices[ device_data.id ].buttonEvent = device.state.buttonEvent;
-			this._devices[ device_data.id ].lastUpdated = device.state.lastUpdated;
+			this._devices[ device_data.id ].buttonEvent = deviceInstance.state.buttonEvent;
+			this._devices[ device_data.id ].lastUpdated = deviceInstance.state.lastUpdated;
 		} else {
 
 			// if last press changed and button is the same
-			if( device.state.lastUpdated !== this._devices[ device_data.id ].lastUpdated
-			 && device.state.buttonEvent === this._devices[ device_data.id ].buttonEvent ) {
-				this._devices[ device_data.id ].lastUpdated = device.state.lastUpdated;
+			if( deviceInstance.state.lastUpdated !== this._devices[ device_data.id ].lastUpdated
+			 && deviceInstance.state.buttonEvent === this._devices[ device_data.id ].buttonEvent ) {
+				this._devices[ device_data.id ].lastUpdated = deviceInstance.state.lastUpdated;
 
 				Homey.manager('flow').triggerDevice('tap_button_pressed', null, {
-					button: buttonEventMap[ device.state.buttonEvent ]
+					button: buttonEventMap[ deviceInstance.state.buttonEvent ]
 				}, device_data);
 
 			}
 
 			// else if the button has changed
-			else if( this._devices[ device_data.id ].buttonEvent !== device.state.buttonEvent ) {
-				this._devices[ device_data.id ].buttonEvent = device.state.buttonEvent;
-				this._devices[ device_data.id ].lastUpdated = device.state.lastUpdated;
+			else if( this._devices[ device_data.id ].buttonEvent !== deviceInstance.state.buttonEvent ) {
+				this._devices[ device_data.id ].buttonEvent = deviceInstance.state.buttonEvent;
+				this._devices[ device_data.id ].lastUpdated = deviceInstance.state.lastUpdated;
 
 				Homey.manager('flow').triggerDevice('tap_button_pressed', null, {
-					button: buttonEventMap[ device.state.buttonEvent ]
+					button: buttonEventMap[ deviceInstance.state.buttonEvent ]
 				}, device_data);
 
 			}
