@@ -1,0 +1,36 @@
+,
+		{
+			"id": "motionsensor",
+			"name": {
+				"en": "Motion Sensor",
+				"nl": "Bewegingssensor"
+			},
+			"class": "other",
+			"capabilities": [],
+			"images": {
+				"large": "drivers/motionsensor/assets/images/large.jpg",
+				"small": "drivers/motionsensor/assets/images/small.jpg"
+			},
+			"pair": [
+				{
+					"id": "select_bridge",
+					"navigation": {
+						"next": "press_button"
+					}
+				},
+				{
+					"id": "press_button"
+				},
+				{
+					"id": "list_devices",
+					"template": "list_devices",
+					"navigation": {
+						"next": "add_devices"
+					}
+				},
+				{
+					"id": "add_devices",
+					"template": "add_devices"
+				}
+			]
+		}
