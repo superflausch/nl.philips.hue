@@ -417,16 +417,13 @@ class DriverBulb extends Driver {
 		let device = this.getDevice( args.device );
 		if( device instanceof Error ) return callback( device );
 
-		var hue = Math.random();
+		var onoff = true;
 		var saturation = 1;
+		var hue = Math.random();
 
-		module.exports.realtime( args.device, 'onoff', true );
-		module.exports.realtime( args.device, 'light_hue', hue );
-		module.exports.realtime( args.device, 'light_saturation', saturation );
-
-		device[ capabilityMap['onoff'] ] = DriverBulb.convertValue( 'onoff', 'set', true );
-		device[ capabilityMap['light_hue'] ] = DriverBulb.convertValue( 'light_hue', 'set', hue );
-		device[ capabilityMap['light_saturation'] ] = DriverBulb.convertValue( 'light_saturation', 'set', saturation );
+		this._onExportsCapabilitiesOnoffSet( args.device, onoff, function(){});
+		this._onExportsCapabilitiesLightSaturationSet( args.device, saturation, function(){});
+		this._onExportsCapabilitiesLightHueSet( args.device, hue, callback);
 
 		device.setInstanceProperty('effect', 'none');
 		device.save( callback );
