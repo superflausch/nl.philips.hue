@@ -274,7 +274,8 @@
 					},
 					{
 						"name": "brightness",
-						"type": "number",
+						"type": "range",
+						"label": "%",
 						"placeholder":{
 							"en": "Brightness (%)",
 							"nl": "Helderheid (%)"
