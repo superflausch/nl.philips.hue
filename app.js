@@ -4,7 +4,8 @@ const events		= require('events');
 const huejay 		= require('huejay');
 const Bridge		= require('./lib/Bridge.js');
 
-const findBridgesInterval = 60000;
+const findBridgesInterval 	= 60000;
+const discoverStrategies 	= [ 'nupnp'/*, 'upnp'*/ ];
 
 class App extends events.EventEmitter {
 
@@ -38,7 +39,7 @@ class App extends events.EventEmitter {
 	*/
 	findBridges() {
 
-		[ 'nupnp', 'upnp' ].forEach(( strategy ) => {
+		discoverStrategies.forEach(( strategy ) => {
 			huejay.discover({
 				strategy: strategy
 			})
