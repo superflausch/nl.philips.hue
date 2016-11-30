@@ -136,7 +136,13 @@ class DriverBulb extends Driver {
 		for( let capabilityId in device.state ) {
 
 			// prevent dim from going to 0 if device is off
-			if( capabilityId === 'dim' && device.state['onoff'] === false ) continue;
+			if( capabilityId === 'dim' && device.state['onoff'] === false ) {
+				if( device.state[ capabilityId ] === null ) {
+					device.state[ capabilityId ] = 1;
+					module.exports.realtime( device_data, capabilityId, device.state[ capabilityId ] );
+				}
+				continue;
+			}
 
 			let value = deviceInstance[ capabilityMap[ capabilityId ] ];
 			if( typeof value !== 'undefined' ) {
