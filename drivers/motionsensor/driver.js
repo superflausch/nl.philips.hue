@@ -2,24 +2,16 @@
 
 const Driver	= require('../../lib/Driver.js');
 
-const buttonEventMap		= {
-	'1002': 'on',
-	'2002': 'increase_brightness',
-	'3002': 'decrease_brightness',
-	'4002': 'off'
+String.prototype.getMAC = function() {
+	return this.split('-')[0].toLowerCase();
 }
 
-class DriverDimmerSwitch extends Driver {
+class DriverMotionSensor extends Driver {
 
 	constructor() {
 		super();
 
 		this._deviceType = 'sensor';
-
-		Homey
-			.manager('flow')
-			.on('trigger.motionsensor_foo', this._onFlowTriggerDimmerSwitchButtonPressed.bind(this));
-
 	}
 
 	_syncDevice( device_data ) {
@@ -31,37 +23,27 @@ class DriverDimmerSwitch extends Driver {
 
 		module.exports.setAvailable( device_data );
 
-		console.log(deviceInstance)
+		module.exports.realtime( device_data, 'alarm_motion', deviceInstance.state.presence );
+		module.exports.realtime( device_data, 'measure_battery', deviceInstance.config.sensitivity );
 
-		return;
+		let bridge = Homey.app.getBridge( device_data.bridge_id );
+		if( bridge instanceof Error ) return bridge;
 
-		// if button changed, but not first time
-		if( typeof this._devices[ device_data.id ].buttonEvent === 'undefined' ) {
-			this._devices[ device_data.id ].buttonEvent = deviceInstance.state.buttonEvent;
-			this._devices[ device_data.id ].lastUpdated = deviceInstance.state.lastUpdated;
-		} else {
+		for( let sensor of bridge.getSensors() ) {
 
-			// if last press changed and button is the same
-			if( deviceInstance.state.lastUpdated !== this._devices[ device_data.id ].lastUpdated
-			 && deviceInstance.state.buttonEvent === this._devices[ device_data.id ].buttonEvent ) {
-				this._devices[ device_data.id ].lastUpdated = deviceInstance.state.lastUpdated;
+			if( sensor.modelId !== 'SML001' ) continue;
 
-				Homey.manager('flow').triggerDevice('dimmerswitch_button_pressed', null, {
-					button: buttonEventMap[ deviceInstance.state.buttonEvent ]
-				}, device_data);
+			if( sensor.uniqueId.getMAC() === device_data.id.getMAC() ) {
 
-			}
-
-			// else if the button has changed
-			else if( this._devices[ device_data.id ].buttonEvent !== deviceInstance.state.buttonEvent ) {
-				this._devices[ device_data.id ].buttonEvent = deviceInstance.state.buttonEvent;
-				this._devices[ device_data.id ].lastUpdated = deviceInstance.state.lastUpdated;
-
-				Homey.manager('flow').triggerDevice('dimmerswitch_button_pressed', null, {
-					button: buttonEventMap[ deviceInstance.state.buttonEvent ]
-				}, device_data);
+				if( sensor.type === 'ZLLLightLevel' ) {
+					let lightLevel = Math.pow( 10, ( sensor.state.lightLevel - 1 ) / 10000 );
+					module.exports.realtime( device_data, 'measure_luminance', lightLevel );
+				} else if( sensor.type === 'ZLLTemperature' ) {
+					module.exports.realtime( device_data, 'measure_temperature', sensor.state.temperature );
+				}
 
 			}
+
 		}
 
 	}
@@ -78,9 +60,7 @@ class DriverDimmerSwitch extends Driver {
 
 		for( let sensor of state.bridge.getSensors() ) {
 
-			if( sensor.modelId !== 'SML001' ) continue;
-
-			console.log(sensor)
+			if( sensor.modelId !== 'SML001' || sensor.type !== 'ZLLPresence' ) continue;
 
 			let deviceObj = {
 				name			: sensor.name,
@@ -102,4 +82,4 @@ class DriverDimmerSwitch extends Driver {
 	}
 }
 
-module.exports = new DriverDimmerSwitch();
+module.exports = new DriverMotionSensor();
