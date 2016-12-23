@@ -2,10 +2,6 @@
 
 const Driver	= require('../../lib/Driver.js');
 
-String.prototype.getMAC = function() {
-	return this.split('-')[0].toLowerCase();
-}
-
 class DriverMotionSensor extends Driver {
 
 	constructor() {
@@ -24,7 +20,7 @@ class DriverMotionSensor extends Driver {
 		module.exports.setAvailable( device_data );
 
 		module.exports.realtime( device_data, 'alarm_motion', deviceInstance.state.presence );
-		module.exports.realtime( device_data, 'measure_battery', deviceInstance.config.sensitivity );
+		module.exports.realtime( device_data, 'measure_battery', deviceInstance.config.sensitivity ); // HueJay bug, issue #71
 
 		let bridge = Homey.app.getBridge( device_data.bridge_id );
 		if( bridge instanceof Error ) return bridge;
@@ -33,7 +29,7 @@ class DriverMotionSensor extends Driver {
 
 			if( sensor.modelId !== 'SML001' ) continue;
 
-			if( sensor.uniqueId.getMAC() === device_data.id.getMAC() ) {
+			if( Driver.getMAC( sensor.uniqueId ) === Driver.getMAC( device_data.id ) ) {
 
 				if( sensor.type === 'ZLLLightLevel' ) {
 					let lightLevel = Math.pow( 10, ( sensor.state.lightLevel - 1 ) / 10000 );
@@ -72,13 +68,6 @@ class DriverMotionSensor extends Driver {
 		}
 
 		callback( null, result );
-	}
-
-	/*
-		Flow methods
-	*/
-	_onFlowTriggerDimmerSwitchButtonPressed( callback, args, state ) {
-		callback( null, args.button === state.button );
 	}
 }
 

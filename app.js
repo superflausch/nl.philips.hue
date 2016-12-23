@@ -1,6 +1,8 @@
 "use strict";
 
 const events		= require('events');
+
+const Log 			= require('homey-log').Log;
 const huejay 		= require('huejay');
 const Bridge		= require('./lib/Bridge.js');
 
