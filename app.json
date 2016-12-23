@@ -11,6 +11,14 @@
 	"author": {
 		"name": "Athom B.V."
 	},
+	"contributors": {
+		"developers": [
+			{
+				"name": "Dennie de Groot",
+				"email": "mail@denniedegroot.nl"
+			}
+		]
+	},
 	"images": {
 		"large": "assets/images/large.jpg",
 		"small": "assets/images/small.jpg"
@@ -98,6 +106,41 @@
 			"images": {
 				"large": "drivers/tap/assets/images/large.jpg",
 				"small": "drivers/tap/assets/images/small.jpg"
+			},
+			"pair": [
+				{
+					"id": "select_bridge",
+					"navigation": {
+						"next": "press_button"
+					}
+				},
+				{
+					"id": "press_button"
+				},
+				{
+					"id": "list_devices",
+					"template": "list_devices",
+					"navigation": {
+						"next": "add_devices"
+					}
+				},
+				{
+					"id": "add_devices",
+					"template": "add_devices"
+				}
+			]
+		},
+		{
+			"id": "motionsensor",
+			"name": {
+				"en": "Motion Sensor",
+				"nl": "Bewegingssensor"
+			},
+			"class": "sensor",
+			"capabilities": [ "alarm_motion", "measure_temperature", "measure_luminance", "measure_battery" ],
+			"images": {
+				"large": "drivers/motionsensor/assets/images/large.jpg",
+				"small": "drivers/motionsensor/assets/images/small.jpg"
 			},
 			"pair": [
 				{
