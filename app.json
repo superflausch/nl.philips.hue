@@ -395,6 +395,34 @@
 						"type": "autocomplete"
 					}
 				]
+			},
+			{
+				"id": "enableMotionSensor",
+				"title": {
+					"en": "Enable sensor",
+					"nl": "Schakel sensor in"
+				},
+				"args": [
+					{
+						"name": "device",
+						"type": "device",
+						"filter": "driver_id=motionsensor"
+					}
+				]
+			},
+			{
+				"id": "disableMotionSensor",
+				"title": {
+					"en": "Disable sensor",
+					"nl": "Schakel sensor uit"
+				},
+				"args": [
+					{
+						"name": "device",
+						"type": "device",
+						"filter": "driver_id=motionsensor"
+					}
+				]
 			}
 		]
 	}
