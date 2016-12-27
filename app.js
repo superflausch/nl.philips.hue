@@ -65,10 +65,9 @@ class App extends events.EventEmitter {
 		// skip if already found but update ip if changed
 		if( this._bridges[ bridge.id ] instanceof Bridge ) {
 
-			if ( this._bridges[ bridge.id ].address != bridge.ip ) {
+			if( this._bridges[ bridge.id ].address !== bridge.ip ) {
 				this.log(`Bridge ip has changed from ${this._bridges[ bridge.id ].address} to ${bridge.ip}`);
-				this._bridges[ bridge.id ].address = bridge.ip;
-				this._bridges[ bridge.id ]._client.host = bridge.ip;
+				this._bridges[ bridge.id ].setAddress( bridge.ip );
 			}
 
 			return;
