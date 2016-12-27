@@ -8,6 +8,11 @@ class DriverMotionSensor extends Driver {
 		super();
 
 		this._deviceType = 'sensor';
+
+		Homey
+			.manager('flow')
+			.on('action.enableMotionSensor', this._onFlowActionEnableMotionSensor.bind(this))
+			.on('action.disableMotionSensor', this._onFlowActionDisableMotionSensor.bind(this));
 	}
 
 	_syncDevice( device_data ) {
@@ -68,6 +73,29 @@ class DriverMotionSensor extends Driver {
 		}
 
 		callback( null, result );
+	}
+
+	/*
+		Flow methods
+	*/
+	_onFlowActionEnableMotionSensor( callback, args, state ) {
+
+		let device = this.getDevice( args.device );
+		if( device instanceof Error ) return callback( device );
+
+		device.setInstanceConfigProperty( 'on', true );
+		device.save( callback );
+
+	}
+
+	_onFlowActionDisableMotionSensor( callback, args, state ) {
+
+		let device = this.getDevice( args.device );
+		if( device instanceof Error ) return callback( device );
+
+		device.setInstanceConfigProperty( 'on', false );
+		device.save( callback );
+
 	}
 }
 
