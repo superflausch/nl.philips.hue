@@ -192,8 +192,12 @@ class App extends events.EventEmitter {
 						let driver = Homey.manager('drivers').getDriver('bulb');
 
 						for( let light of lights ) {
-							light.on = true;
-							driver.realtime( driver.getDeviceData( bridge, light ), 'onoff', true );
+
+							if( group.lightIds.indexOf( light.id.toString() ) > -1 ) {
+								light.on = true;
+								driver.realtime( driver.getDeviceData( bridge, light ), 'onoff', true );
+							}
+
 						}
 
 					})
@@ -219,8 +223,12 @@ class App extends events.EventEmitter {
 						let driver = Homey.manager('drivers').getDriver('bulb');
 
 						for( let light of lights ) {
-							light.on = false;
-							driver.realtime( driver.getDeviceData( bridge, light ), 'onoff', false );
+
+							if( group.lightIds.indexOf( light.id.toString() ) > -1 ) {
+								light.on = false;
+								driver.realtime( driver.getDeviceData( bridge, light ), 'onoff', false );
+							}
+
 						}
 
 					})
