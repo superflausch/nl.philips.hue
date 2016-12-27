@@ -14,6 +14,8 @@ class App extends events.EventEmitter {
 	constructor() {
 		super();
 
+		this.setMaxListeners(0);
+
 		this._bridges = {};
 
 		this.init = this._onExportsInit.bind(this);
