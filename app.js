@@ -22,8 +22,10 @@ class App extends events.EventEmitter {
 
 		Homey.manager('flow').on('action.setScene', this._onFlowActionSetScene.bind(this));
 		Homey.manager('flow').on('action.setScene.scene.autocomplete', this._onFlowActionSetSceneSceneAutocomplete.bind(this));
-		Homey.manager('flow').on('action.allOff', this._onFlowActionAllOff.bind(this));
-		Homey.manager('flow').on('action.allOff.group.autocomplete', this._onFlowActionAllOffGroupAutocomplete.bind(this));
+		Homey.manager('flow').on('action.groupOn', this._onFlowActionGroupOn.bind(this));
+		Homey.manager('flow').on('action.groupOn.group.autocomplete', this._onFlowActionGroupAutocomplete.bind(this));
+		Homey.manager('flow').on('action.groupOff', this._onFlowActionGroupOff.bind(this));
+		Homey.manager('flow').on('action.groupOff.group.autocomplete', this._onFlowActionGroupAutocomplete.bind(this));
 
 	}
 
@@ -174,7 +176,34 @@ class App extends events.EventEmitter {
 
 	}
 
-	_onFlowActionAllOff( callback, args, state ) {
+	_onFlowActionGroupOn( callback, args, state ) {
+
+		let bridge = this.getBridge( args.group.bridge_id );
+		if( bridge instanceof Error ) return callback( bridge );
+
+		bridge.getGroup( args.group.id )
+			.then(( group ) => {
+				group.on = true;
+				bridge.saveGroup( group )
+					.then(() => {
+						callback();
+
+						let lights = bridge.getLights();
+						let driver = Homey.manager('drivers').getDriver('bulb');
+
+						for( let light of lights ) {
+							light.on = true;
+							driver.realtime( driver.getDeviceData( bridge, light ), 'onoff', true );
+						}
+
+					})
+					.catch( callback );
+			})
+			.catch( callback );
+
+	}
+
+	_onFlowActionGroupOff( callback, args, state ) {
 
 		let bridge = this.getBridge( args.group.bridge_id );
 		if( bridge instanceof Error ) return callback( bridge );
@@ -201,7 +230,7 @@ class App extends events.EventEmitter {
 
 	}
 
-	_onFlowActionAllOffGroupAutocomplete( callback, args ) {
+	_onFlowActionGroupAutocomplete( callback, args ) {
 
 		if( Object.keys( this._bridges ).length < 1 )
 			return callback( new Error( __("no_bridges") ) );
