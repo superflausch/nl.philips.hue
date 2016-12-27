@@ -31,6 +31,8 @@ class DriverDimmerSwitch extends Driver {
 
 		module.exports.setAvailable( device_data );
 
+		module.exports.realtime( device_data, 'measure_battery', deviceInstance.config.battery );
+
 		// if button changed, but not first time
 		if( typeof this._devices[ device_data.id ].buttonEvent === 'undefined' ) {
 			this._devices[ device_data.id ].buttonEvent = deviceInstance.state.buttonEvent;

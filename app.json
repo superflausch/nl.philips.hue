@@ -66,8 +66,8 @@
 				"en": "Dimmer Switch",
 				"nl": "Dimmer Switch"
 			},
-			"class": "other",
-			"capabilities": [],
+			"class": "sensor",
+			"capabilities": [ "measure_battery" ],
 			"images": {
 				"large": "drivers/dimmerswitch/assets/images/large.jpg",
 				"small": "drivers/dimmerswitch/assets/images/small.jpg"
