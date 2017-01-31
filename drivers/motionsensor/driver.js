@@ -25,7 +25,7 @@ class DriverMotionSensor extends Driver {
 		module.exports.setAvailable( device_data );
 
 		module.exports.realtime( device_data, 'alarm_motion', deviceInstance.state.presence );
-		module.exports.realtime( device_data, 'measure_battery', deviceInstance.config.sensitivity ); // HueJay bug, issue #71
+		module.exports.realtime( device_data, 'measure_battery', deviceInstance.config.battery );
 
 		let bridge = Homey.app.getBridge( device_data.bridge_id );
 		if( bridge instanceof Error ) return bridge;
