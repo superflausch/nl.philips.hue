@@ -159,9 +159,6 @@ class DriverBulb extends Driver {
 		let device = this.getDevice( device_data );
 		if( device instanceof Error ) return this.error( device );
 
-		let deviceInstance = this.getDeviceInstance( device_data );
-		if( deviceInstance instanceof Error ) return this.error( deviceInstance );
-
 		for( let capabilityId in device.state ) {
 
 			// light_mode is not setable
@@ -183,10 +180,10 @@ class DriverBulb extends Driver {
 			}
 
 			let convertedValue = DriverBulb.convertValue( capabilityId, 'set', value );
-			deviceInstance[ capabilityMap[ capabilityId] ] = convertedValue;
+			device.setInstanceProperty( capabilityMap[ capabilityId], convertedValue );
 		}
 
-		deviceInstance['transitionTime'] = defaultTransitionTime;
+		device.setInstanceProperty('transitionTime', defaultTransitionTime);
 
 	}
 
