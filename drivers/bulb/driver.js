@@ -183,7 +183,9 @@ class DriverBulb extends Driver {
 			device.setInstanceProperty( capabilityMap[ capabilityId], convertedValue );
 		}
 
-		device.setInstanceProperty('transitionTime', defaultTransitionTime);
+		if( typeof device.setInstanceProperties['transitionTime'] === 'undefined' ) {
+			device.setInstanceProperty('transitionTime', defaultTransitionTime);
+		}
 
 	}
 
