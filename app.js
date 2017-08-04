@@ -84,6 +84,7 @@ class App extends events.EventEmitter {
 				.on('error', this.error.bind( this, `[${bridge.id}]`) )
 				.on('bridge_available', () => {
 					this.emit('bridge_available', bridgeId );
+					this.emit('bridge_available_' + bridgeId, bridgeInstance );
 				})
 				.init()
 	}
