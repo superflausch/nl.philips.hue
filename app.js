@@ -78,12 +78,11 @@ class App extends events.EventEmitter {
 		this.log(`Found bridge ${bridge.id} @ ${bridge.ip}`);
 		
 		let bridgeId = bridge.id;
-		let bridgeInstance = new Bridge( bridge.id, bridge.ip );
+		let bridgeInstance = this._bridges[ bridge.id ] = new Bridge( bridge.id, bridge.ip );
 			bridgeInstance
 				.on('log', this.log.bind( this, `[${bridge.id}]`) )
 				.on('error', this.error.bind( this, `[${bridge.id}]`) )
 				.on('bridge_available', () => {
-					this._bridges[ bridge.id ] = bridgeInstance;
 					this.emit('bridge_available', bridgeId );
 				})
 				.init()
