@@ -9,6 +9,14 @@ const Bridge		= require('./lib/Bridge.js');
 const findBridgesInterval 	= 60000;
 const discoverStrategies 	= [ 'nupnp', 'upnp' ];
 
+/*
+// very hacky - overwrite console.log to be synchronous, to test if this solves the memory leak
+console.log = function log()
+{
+   require('fs').writeSync(process.stdout.fd, require('util').format.apply(null,arguments) + "\n");
+}
+*/
+
 class App extends events.EventEmitter {
 
 	constructor() {
@@ -27,9 +35,24 @@ class App extends events.EventEmitter {
 		Homey.manager('flow').on('action.groupOff', this._onFlowActionGroupOff.bind(this));
 		Homey.manager('flow').on('action.groupOff.group.autocomplete', this._onFlowActionGroupAutocomplete.bind(this));
 		
-		setInterval(() => {
-			this.log('Test test test test');
-		}, 1);
+		/*
+		let i = 0;
+		
+		let log = () => {
+			this.log('Test test test test', i);
+			
+			if( i % 100000 === 0 ) {
+				this.log('PAUSE 3s');
+				setTimeout( log, 3000 );
+			} else {			
+				setTimeout( log, 1 );
+			}
+			
+			i++;
+		}
+		
+		log();
+		*/
 
 	}
 
@@ -37,7 +60,9 @@ class App extends events.EventEmitter {
 		Helper methods
 	*/
 	log() {
-		console.log.bind(this, '[log]' ).apply( this, arguments );
+		if( process.env.DEBUG === '1' ) {
+			console.log.bind(this, '[log]' ).apply( this, arguments );
+		}
 	}
 
 	error() {
