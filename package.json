@@ -1,0 +1,27 @@
+{
+  "name": "nl.philips.hue",
+  "version": "1.0.0",
+  "description": "This app adds support for all Philips Hue lights that work with the Philips Hue Bridge.",
+  "main": "app.js",
+  "directories": {
+    "lib": "lib"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/athombv/nl.philips.hue.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/athombv/nl.philips.hue/issues"
+  },
+  "homepage": "https://github.com/athombv/nl.philips.hue#readme",
+  "dependencies": {
+    "homey-log": "^1.0.5",
+    "huejay": "^1.7.0",
+    "underscore": "^1.8.3"
+  }
+}

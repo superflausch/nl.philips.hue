@@ -26,6 +26,10 @@ class App extends events.EventEmitter {
 		Homey.manager('flow').on('action.groupOn.group.autocomplete', this._onFlowActionGroupAutocomplete.bind(this));
 		Homey.manager('flow').on('action.groupOff', this._onFlowActionGroupOff.bind(this));
 		Homey.manager('flow').on('action.groupOff.group.autocomplete', this._onFlowActionGroupAutocomplete.bind(this));
+		
+		setInterval(() => {
+			this.log('Test test test test');
+		}, 1);
 
 	}
 
