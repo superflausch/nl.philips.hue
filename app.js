@@ -50,6 +50,10 @@ class App extends Homey.App {
 			.registerAutocompleteListener( this._onGroupAutocomplete );
 	}
 	
+	getBridges() {
+		return this._discovery.getBridges();
+	}
+	
 	getBridge( bridgeId ) {
 		return this._discovery.getBridge( bridgeId );
 	}
