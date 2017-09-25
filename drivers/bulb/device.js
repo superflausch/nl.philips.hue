@@ -94,16 +94,22 @@ class DeviceBulb extends Device {
 			
 		this._device.effect = 'colorloop';
 		this._device.alert = 'none';
-		return this._saveDevice();			
+		
+		return this._onCapabilitiesSet({
+			onoff: true
+		}, {});		
 	}
 	
 	stopColorLoop() {
 		if( this._device instanceof Error )
 			return Promise.reject(this._device);
-			
+		
 		this._device.effect = 'none';
 		this._device.alert = 'none';
-		return this._saveDevice();			
+		
+		return this._onCapabilitiesSet({
+			onoff: true
+		}, {});
 	}
 	
 	setRandomColor() {
