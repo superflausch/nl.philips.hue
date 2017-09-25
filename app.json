@@ -1,6 +1,6 @@
 {
 	"id": "nl.philips.hue",
-	"version": "2.2.9",
+	"version": "3.0.0",
 	"compatibility": ">=1.5.0",
 	"sdk": 2,
 	"name": {
@@ -44,6 +44,111 @@
 			"images": {
 				"large": "drivers/bulb/assets/images/large.jpg",
 				"small": "drivers/bulb/assets/images/small.jpg"
+			},
+			"pair": [
+				{
+					"id": "select_bridge",
+					"navigation": {
+						"next": "press_button"
+					}
+				},
+				{
+					"id": "press_button"
+				},
+				{
+					"id": "list_devices",
+					"template": "list_devices",
+					"navigation": {
+						"next": "add_devices"
+					}
+				},
+				{
+					"id": "add_devices",
+					"template": "add_devices"
+				}
+			]
+		},
+		{
+			"id": "dimmerswitch",
+			"name": {
+				"en": "Dimmer Switch",
+				"nl": "Dimmer Switch"
+			},
+			"class": "sensor",
+			"capabilities": [ "measure_battery" ],
+			"images": {
+				"large": "drivers/dimmerswitch/assets/images/large.jpg",
+				"small": "drivers/dimmerswitch/assets/images/small.jpg"
+			},
+			"pair": [
+				{
+					"id": "select_bridge",
+					"navigation": {
+						"next": "press_button"
+					}
+				},
+				{
+					"id": "press_button"
+				},
+				{
+					"id": "list_devices",
+					"template": "list_devices",
+					"navigation": {
+						"next": "add_devices"
+					}
+				},
+				{
+					"id": "add_devices",
+					"template": "add_devices"
+				}
+			]
+		},
+		{
+			"id": "tap",
+			"name": {
+				"en": "Tap",
+				"nl": "Tap"
+			},
+			"class": "other",
+			"capabilities": [],
+			"images": {
+				"large": "drivers/tap/assets/images/large.jpg",
+				"small": "drivers/tap/assets/images/small.jpg"
+			},
+			"pair": [
+				{
+					"id": "select_bridge",
+					"navigation": {
+						"next": "press_button"
+					}
+				},
+				{
+					"id": "press_button"
+				},
+				{
+					"id": "list_devices",
+					"template": "list_devices",
+					"navigation": {
+						"next": "add_devices"
+					}
+				},
+				{
+					"id": "add_devices",
+					"template": "add_devices"
+				}
+			]
+		},
+		{
+			"id": "motionsensor",
+			"name": {
+				"en": "Motion Sensor",
+				"nl": "Bewegingssensor"
+			},
+			"class": "sensor",
+			"capabilities": [ "alarm_motion", "measure_temperature", "measure_luminance", "measure_battery" ],
+			"images": {
+				"large": "drivers/motionsensor/assets/images/large.jpg",
+				"small": "drivers/motionsensor/assets/images/small.jpg"
 			},
 			"pair": [
 				{

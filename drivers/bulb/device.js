@@ -25,9 +25,11 @@ class DeviceBulb extends Device {
 			let convertedValue = DeviceBulb.convertValue(capabilityId, 'get', propertyValue);
 			
 			if( this.getCapabilityValue('onoff') === false && capabilityId === 'dim' ) continue;
-									
+			
 			this.setCapabilityValue( capabilityId, convertedValue )
-				.catch( this.error );
+				.catch( err => {
+					this.error( err, 'capabilityId:', capabilityId, 'convertedValue:', convertedValue);
+				});
 			
 		}
 	}
