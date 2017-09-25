@@ -43,7 +43,29 @@ class DriverBulb extends Driver {
 		/*
 			Initialize Flow
 		*/
-		// TODO
+		new Homey.FlowCardAction('shortAlert')
+			.register()
+			.registerRunListener( args => args.device.shortAlert() );
+			
+		new Homey.FlowCardAction('longAlert')
+			.register()
+			.registerRunListener( args => args.device.longAlert() );
+			
+		new Homey.FlowCardAction('startColorLoop')
+			.register()
+			.registerRunListener( args => args.device.startColorLoop() );
+			
+		new Homey.FlowCardAction('stopColorLoop')
+			.register()
+			.registerRunListener( args => args.device.stopColorLoop() );
+			
+		new Homey.FlowCardAction('setRandomColor')
+			.register()
+			.registerRunListener( args => args.device.setRandomColor() );
+			
+		new Homey.FlowCardAction('brightnessIncrement')
+			.register()
+			.registerRunListener( args => args.device.brightnessIncrement( args.brightness/100, args.trans*1000 ) );
 	}
 
 	_onPairListDevices( state, data, callback ) {

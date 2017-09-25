@@ -9,6 +9,9 @@
 			"description": "Druk op de knop van je Philips Hue bridge"
 		}
 	},
+	"notification": {
+		"brightness_increment_deprecated": "De Flow actie 'Verander helderheid over tijd' zal in de toekomst worden verwijderd. Gebruik a.u.b. de Flow actie 'Zet helderheid' met een 'Tijdsduur' waarde."
+	},
 	"no_bridges": "Geen bridges verbonden",
 	"unreachable": "Onbereikbaar",
 	"all_lights": "Alle lampen"

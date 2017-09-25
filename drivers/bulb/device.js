@@ -14,15 +14,14 @@ const CAPABILITIES_MAP = {
 
 class DeviceBulb extends Device {
 	
-	_onSync() {		
-		let device = this._getDevice();
-		if( device instanceof Error ) return this.error( device );
+	_onSync() {	
+		super._onSync();
 		
 		for( let capabilityId in CAPABILITIES_MAP ) {
 			if( !this.hasCapability(capabilityId) ) continue;
 			
 			let propertyId = CAPABILITIES_MAP[capabilityId];
-			let propertyValue = device[propertyId];
+			let propertyValue = this._device[propertyId];
 			let convertedValue = DeviceBulb.convertValue(capabilityId, 'get', propertyValue);
 									
 			this.setCapabilityValue( capabilityId, convertedValue )
@@ -31,10 +30,7 @@ class DeviceBulb extends Device {
 		}
 	}
 	
-	_onCapabilitiesSet( valueObj, optsObj ) {
-		let device = this._getDevice();
-		if( device instanceof Error ) return Promise.reject(device);
-		
+	_onCapabilitiesSet( valueObj, optsObj ) {		
 		for( let capabilityId in CAPABILITIES_MAP ) {
 			if( !this.hasCapability(capabilityId) ) continue;
 			
@@ -43,7 +39,7 @@ class DeviceBulb extends Device {
 			if( typeof capabilityValue === 'undefined' ) capabilityValue = this.getCapabilityValue(capabilityId);
 			let convertedValue = DeviceBulb.convertValue(capabilityId, 'set', capabilityValue);
 			
-			// switch light_mode
+			// only send properties for the current light_mode, so the bulb switches accordingly
 			let lightMode = valueObj['light_mode'] || this.getCapabilityValue('light_mode');
 			if( lightMode === 'temperature' ) {
 				if( capabilityId === 'light_hue' || capabilityId === 'light_saturation' ) convertedValue = null;
@@ -54,18 +50,99 @@ class DeviceBulb extends Device {
 			if( convertedValue === null ) continue;
 			
 			try {
-				device[propertyId] = convertedValue;
+				this._device[propertyId] = convertedValue;
+				this.setCapabilityValue(capabilityId, capabilityValue)
+					.catch( this.error );
 			} catch( err ) {
 				this.error( err );
 			}
 		}
 		
 		if( optsObj.dim && optsObj.dim.duration ) {
-			 device.transitionTime = optsObj.dim.duration / 1000;
+			 this._device.transitionTime = optsObj.dim.duration / 1000;
 		}
 		
-		return this._saveDevice( device );
+		return this._saveDevice();
 		
+	}
+	
+	shortAlert() {
+		if( this._device instanceof Error )
+			return Promise.reject(this._device);
+			
+		this._device.effect = 'none';
+		this._device.alert = 'select';
+		return this._saveDevice();			
+	}
+	
+	longAlert() {
+		if( this._device instanceof Error )
+			return Promise.reject(this._device);
+			
+		this._device.effect = 'none';
+		this._device.alert = 'lselect';
+		return this._saveDevice();			
+	}
+	
+	startColorLoop() {
+		if( this._device instanceof Error )
+			return Promise.reject(this._device);
+			
+		this._device.effect = 'colorloop';
+		this._device.alert = 'none';
+		return this._saveDevice();			
+	}
+	
+	stopColorLoop() {
+		if( this._device instanceof Error )
+			return Promise.reject(this._device);
+			
+		this._device.effect = 'none';
+		this._device.alert = 'none';
+		return this._saveDevice();			
+	}
+	
+	setRandomColor() {
+		if( this._device instanceof Error )
+			return Promise.reject(this._device);
+
+		const onoff = true;
+		const light_saturation = 1;
+		const light_hue = Math.random();
+		
+		this._device.effect = 'none';
+		this._device.alert = 'none';
+		
+		return this._onCapabilitiesSet({
+			onoff,
+			light_saturation,
+			light_hue
+		}, {});
+		
+	}
+
+	brightnessIncrement( brightness, duration ) {
+		if( this._device instanceof Error )
+			return Promise.reject(this._device);
+		
+		const settingKey = 'notification_brightness_increment_deprecated';
+		if( Homey.ManagerSettings.get(settingKey) !== true ) {
+			Homey.ManagerSettings.set(settingKey, true);
+			
+			new Homey.Notification({
+				excerpt: Homey.__('notification.brightness_increment_deprecated')
+			})
+				.register()
+				.catch( this.error );
+		}
+		
+		return this._onCapabilitiesSet({
+			dim: brightness
+		}, {
+			dim: {
+				duration: duration
+			}
+		});
 	}
 	
 	static convertValue( capabilityId, direction, value ) {
