@@ -68,7 +68,7 @@ class App extends Homey.App {
 			.init()
 			.catch(err => {
 				if( err && err.message === 'no_token' )
-					return this.error(bridge.id, 'Not yet authorized');
+					return this.error(`Bridge ${bridge.id} is not yet authorized`);
 					
 				this.error(err);
 			});
