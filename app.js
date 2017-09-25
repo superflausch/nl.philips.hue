@@ -66,7 +66,12 @@ class App extends Homey.App {
 				this.emit(`bridge_${bridge.id}`, bridge);
 			})
 			.init()
-			.catch( this.error );
+			.catch(err => {
+				if( err && err.message === 'no_token' )
+					return this.error(bridge.id, 'Not yet authorized');
+					
+				this.error(err);
+			});
 	}
 	
 	_onFlowActionSetScene( args ) {
