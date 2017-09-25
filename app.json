@@ -34,6 +34,13 @@
 			},
 			"class": "light",
 			"capabilities": [ "onoff", "dim", "light_hue", "light_saturation", "light_temperature" ],
+			"capabilitiesOptions": {
+				"dim": {
+					"opts": {
+						"duration": true
+					}
+				}
+			},
 			"images": {
 				"large": "drivers/bulb/assets/images/large.jpg",
 				"small": "drivers/bulb/assets/images/small.jpg"

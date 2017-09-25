@@ -60,11 +60,11 @@ class DeviceBulb extends Device {
 			}
 		}
 		
-		return this._bridge.saveLight( device )
-			.catch( err => {
-				this.error( err );
-				throw err;
-			});
+		if( optsObj.dim && optsObj.dim.duration ) {
+			 device.transitionTime = optsObj.dim.duration / 1000;
+		}
+		
+		return this._saveDevice( device );
 		
 	}
 	
