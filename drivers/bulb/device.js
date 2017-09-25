@@ -76,7 +76,10 @@ class DeviceBulb extends Device {
 			
 		this._device.effect = 'none';
 		this._device.alert = 'select';
-		return this._saveDevice();			
+		
+		return this._onCapabilitiesSet({
+			onoff: true
+		}, {});		
 	}
 	
 	longAlert() {
@@ -85,7 +88,10 @@ class DeviceBulb extends Device {
 			
 		this._device.effect = 'none';
 		this._device.alert = 'lselect';
-		return this._saveDevice();			
+		
+		return this._onCapabilitiesSet({
+			onoff: true
+		}, {});		
 	}
 	
 	startColorLoop() {
