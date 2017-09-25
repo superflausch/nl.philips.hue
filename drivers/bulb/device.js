@@ -23,6 +23,8 @@ class DeviceBulb extends Device {
 			let propertyId = CAPABILITIES_MAP[capabilityId];
 			let propertyValue = this._device[propertyId];
 			let convertedValue = DeviceBulb.convertValue(capabilityId, 'get', propertyValue);
+			
+			if( this.getCapabilityValue('onoff') === false && capabilityId === 'dim' ) continue;
 									
 			this.setCapabilityValue( capabilityId, convertedValue )
 				.catch( this.error );
@@ -139,9 +141,7 @@ class DeviceBulb extends Device {
 		return this._onCapabilitiesSet({
 			dim: brightness
 		}, {
-			dim: {
-				duration: duration
-			}
+			dim: { duration }
 		});
 	}
 	

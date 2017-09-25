@@ -87,7 +87,7 @@ class DriverBulb extends Driver {
 
 			let deviceObj = {
 				name			: light.name,
-				data 			: this.getDeviceData( state.bridge, light ),
+				data 			: Homey.app.getDeviceData( state.bridge, light ),
 				capabilities	: deviceCapabilities
 			};
 
