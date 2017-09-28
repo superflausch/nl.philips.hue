@@ -160,8 +160,14 @@ class DeviceBulb extends Device {
 	}
 	
 	static convertValue( capabilityId, direction, value ) {
-
-		if( capabilityId === 'dim' || capabilityId === 'light_saturation'  ) {
+		
+		if( capabilityId === 'onoff' ) {
+			if( direction === 'get' ) {
+				return value === true;
+			} else if( direction === 'set' ) {
+				return value === true;
+			}
+		} else if( capabilityId === 'dim' || capabilityId === 'light_saturation'  ) {
 			if( direction === 'get' ) {
 				return value / 254;
 			} else if( direction === 'set' ) {
