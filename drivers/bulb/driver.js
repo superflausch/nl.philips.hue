@@ -62,10 +62,6 @@ class DriverBulb extends Driver {
 		new Homey.FlowCardAction('setRandomColor')
 			.register()
 			.registerRunListener( args => args.device.setRandomColor() );
-			
-		new Homey.FlowCardAction('brightnessIncrement')
-			.register()
-			.registerRunListener( args => args.device.brightnessIncrement( args.brightness/100, args.trans*1000 ) );
 	}
 
 	_onPairListDevices( state, data, callback ) {

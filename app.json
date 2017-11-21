@@ -318,40 +318,6 @@
 				]
 			},
 			{
-				"id": "brightnessIncrement",
-				"title": {
-					"en": "Change brightness over time",
-					"nl": "Verander helderheid over tijd"
-				},
-				"args": [
-					{
-						"name": "device",
-						"type": "device",
-						"filter": "driver_id=bulb"
-					},
-					{
-						"name": "trans",
-						"type": "number",
-						"placeholder":{
-							"en": "Transition (s)",
-							"nl": "Tijdsduur (s)"
-						},
-						"min":"0"
-					},
-					{
-						"name": "brightness",
-						"type": "range",
-						"label": "%",
-						"placeholder":{
-							"en": "Brightness (%)",
-							"nl": "Helderheid (%)"
-						},
-						"min":"0",
-						"max":"100"
-					}
-				]
-			},
-			{
 				"id": "startColorLoop",
 				"title": {
 					"en": "Start colorloop effect",
