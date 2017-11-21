@@ -34,7 +34,12 @@ class DeviceBulb extends Device {
 		}
 	}
 	
-	_onCapabilitiesSet( valueObj, optsObj ) {		
+	_onCapabilitiesSet( valueObj, optsObj ) {	
+				
+		if( typeof valueObj.dim === 'number' ) {
+			valueObj.onoff = valueObj.dim > 0;	
+		}
+				
 		for( let capabilityId in CAPABILITIES_MAP ) {
 			if( !this.hasCapability(capabilityId) ) continue;
 			
