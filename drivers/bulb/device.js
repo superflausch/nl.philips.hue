@@ -130,6 +130,7 @@ class DeviceBulb extends Device {
 		const onoff = true;
 		const light_saturation = 1;
 		const light_hue = Math.random();
+		const light_mode = 'color';
 		
 		this._device.effect = 'none';
 		this._device.alert = 'none';
@@ -137,7 +138,8 @@ class DeviceBulb extends Device {
 		return this._onCapabilitiesSet({
 			onoff,
 			light_saturation,
-			light_hue
+			light_hue,
+			light_mode
 		}, {});
 		
 	}
