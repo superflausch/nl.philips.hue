@@ -67,10 +67,12 @@ class DeviceBulb extends Device {
 			}
 		}
 		
-		if( optsObj.dim && optsObj.dim.duration ) {
-			 this._device.transitionTime = optsObj.dim.duration / 1000;
+		for( let key in optsObj ) {
+			if( typeof optsObj[key].duration === 'number' ) {
+				this._device.transitionTime = optsObj[key].duration / 1000;
+			}
 		}
-		
+				
 		return this._saveDevice();
 		
 	}
