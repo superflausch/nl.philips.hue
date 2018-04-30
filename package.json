@@ -21,6 +21,6 @@
   "homepage": "https://github.com/athombv/nl.philips.hue#readme",
   "dependencies": {
     "homey-log": "^1.0.5",
-    "huejay": "^1.7.0"
+    "huejay": "^1.8.2"
   }
 }
