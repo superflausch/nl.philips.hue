@@ -81,25 +81,19 @@ class DeviceBulb extends Device {
 		if( this._device instanceof Error )
 			return Promise.reject(this._device);
 			
-		this._device.effect = 'none';
 		this._device.alert = 'select';
-		
-		return this._onCapabilitiesSet({
-			onoff: true
-		}, {});		
+				
+		return this._saveDevice();
 	}
 	
 	longAlert() {
 		if( this._device instanceof Error )
 			return Promise.reject(this._device);
 			
-		this._device.effect = 'none';
 		this._device.alert = 'lselect';
-		
-		return this._onCapabilitiesSet({
-			onoff: true
-		}, {});		
-	}
+				
+		return this._saveDevice();
+  }
 	
 	startColorLoop() {
 		if( this._device instanceof Error )
