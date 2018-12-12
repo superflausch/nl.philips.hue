@@ -77,6 +77,7 @@ class DriverBulb extends Driver {
 		
 		for( let lightId in lights ) {
 			let light = lights[lightId];
+			console.log('Model ID:', light.modelId, light.name);
 
 			let deviceCapabilities = typeCapabilityMap[ light.type.toLowerCase() ];
 			if( !Array.isArray( deviceCapabilities ) ) continue;
