@@ -17,6 +17,7 @@ const iconsMap				= {
 	'LCT007'	: 'LCT001',
 	'LCT002'	: 'LCT002',
 	'LCT003'	: 'LCT003',
+	'LCT012'	: 'LCT012',
 	'LST001'	: 'LST001',
 	'LLC001'	: 'LLC001',
 	'LLC010'	: 'LLC010',
@@ -35,7 +36,8 @@ const iconsMap				= {
 	'LLM011'	: defaultIcon,
 	'LLM012'	: defaultIcon,
 	'LLC020'	: 'LLC020',
-	'LST002'	: 'LST001'
+	'LST002'	: 'LST001',
+	'LTW012'	: 'LCT012'
 }
 
 class DriverBulb extends Driver {
