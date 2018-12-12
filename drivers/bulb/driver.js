@@ -18,6 +18,7 @@ const iconsMap				= {
 	'LCT002'	: 'LCT002',
 	'LCT003'	: 'LCT003',
 	'LST001'	: 'LST001',
+	'LLC001'	: 'LLC001',
 	'LLC010'	: 'LLC010',
 	'LLC011'	: 'LLC011',
 	'LLC012'	: 'LLC011',
