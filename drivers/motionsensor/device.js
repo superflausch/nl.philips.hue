@@ -26,8 +26,8 @@ class DeviceMotionSensor extends Device {
 	_onSync() {	
 		super._onSync();
 						
-		this.setCapabilityValue('alarm_motion', this._device.state.presence);
-		this.setCapabilityValue('measure_battery', parseInt(this._device.config.battery));
+		this._device.state && this.setCapabilityValue('alarm_motion', this._device.state.presence);
+		this._device.config && this.setCapabilityValue('measure_battery', parseInt(this._device.config.battery));
 
 		const sensors = this._bridge.getSensors();
 		for( let sensorId in sensors ) {
