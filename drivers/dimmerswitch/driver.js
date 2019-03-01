@@ -29,6 +29,7 @@ class DriverDimmerSwitch extends Driver {
 
 		for( let sensorId in sensors ) {
 			let sensor = sensors[sensorId];
+			this.log('Model ID:', sensor.modelId, sensor.name);
 
 			if( sensor.modelId !== 'RWL020'
 			 && sensor.modelId !== 'RWL021' ) continue;

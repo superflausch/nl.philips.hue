@@ -3,6 +3,11 @@
 const Homey = require('homey');
 const Device = require('../../lib/Device.js');
 
+const SUPPORTED_SENSORS = [
+  'SML001',
+  'SML002',
+];
+
 class DeviceMotionSensor extends Device {
 	
 	enable() {
@@ -32,7 +37,7 @@ class DeviceMotionSensor extends Device {
 		const sensors = this._bridge.getSensors();
 		for( let sensorId in sensors ) {
 			let sensor = sensors[sensorId];
-			if( sensor.modelId !== 'SML001' ) continue;
+			if( !SUPPORTED_SENSORS.includes(sensor.modelId) ) continue;
 
 			if( DeviceMotionSensor.getMAC(sensor.uniqueId) === DeviceMotionSensor.getMAC(this._deviceId) ) {
 

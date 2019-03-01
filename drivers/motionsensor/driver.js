@@ -3,6 +3,16 @@
 const Homey = require('homey');
 const Driver = require('../../lib/Driver.js');
 
+const SUPPORTED_SENSORS = [
+  'SML001',
+  'SML002',
+];
+
+const iconsMap = {
+	'SML001'	: 'SML001',
+	'SML002'	: 'SML002',
+}
+
 class DriverMotionSensor extends Driver {
 	
 	onInit() {
@@ -33,14 +43,19 @@ class DriverMotionSensor extends Driver {
 
 		for( let sensorId in sensors ) {
 			let sensor = sensors[sensorId];
+			this.log('Model ID:', sensor.modelId, sensor.name);
 
-			if( sensor.modelId !== 'SML001'
+			if( !SUPPORTED_SENSORS.includes(sensor.modelId)
 			 || sensor.type !== 'ZLLPresence' ) continue;
 
 			let deviceObj = {
 				name: sensor.name,
 				data: Homey.app.getDeviceData( state.bridge, sensor )
 			};
+
+			if( typeof iconsMap[ sensor.modelId ] === 'string' ) {
+				deviceObj.icon = `/icons/${iconsMap[sensor.modelId]}.svg`;
+			}
 
 			result.push( deviceObj );
 
