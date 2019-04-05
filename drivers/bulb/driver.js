@@ -39,6 +39,7 @@ const iconsMap				= {
 	'LST002'	: 'LST001',
 	'LTW012'	: 'LCT012',
 	'LCF005'	: 'LCF005',
+	'LCS001'	: 'LCS001',
 	'LCT024'  : 'LCT024',
 }
 
