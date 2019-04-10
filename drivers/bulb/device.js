@@ -30,8 +30,20 @@ module.exports = class DeviceBulb extends HueDevice {
       const convertedValue = this.constructor.convert(capabilityId, 'get', propertyValue);
       
       if( this.getCapabilityValue('onoff') === false && capabilityId === 'dim' ) continue;
-      this.setCapabilityValue(capabilityId, convertedValue).catch(this.error);
+      this.setCapabilityValue(capabilityId, convertedValue).catch(err => {
+        this.error(`Error setting capability ${capabilityId} to value ${convertedValue} (${propertyValue})`);
+      });
     }
+  }
+  
+  onRenamed(name) {
+    if( !this.bridge ) return;
+    
+    const { id } = this;
+    this.bridge.setLightName({
+      id,
+      name,
+    }).catch(this.error);
   }
   
   async setLightState(state) {  
