@@ -19,7 +19,9 @@ module.exports = class DeviceBulb extends HueDevice {
     this.registerMultipleCapabilityListener(capabilities, this.onMultipleCapabilities.bind(this));
   }
   
-  onPoll({ device }) {    
+  onPoll({ device }) {   
+    super.onPoll(...arguments);
+     
     for( const capabilityId in CAPABILITIES_MAP ) {
       if( !this.hasCapability(capabilityId) ) continue;
       

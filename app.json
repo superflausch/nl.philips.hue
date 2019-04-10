@@ -112,7 +112,10 @@
           "id": "list_bridges",
           "template": "list_devices",
           "options": {
-            "singular": true
+            "singular": true,
+            "title": {
+              "en": "Select your bridge..."
+            }
           },
           "navigation": {
             "next": "check_authentication"
