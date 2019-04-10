@@ -9,9 +9,6 @@
 			"description": "Press the button on your Philips Hue bridge"
 		}
 	},
-	"notification": {
-		"brightness_increment_deprecated": "The Flow card 'Change brightness over time' is now obsolete and will be removed in the future. Please use the Flow card 'Set brightness' with a 'Duration' value."
-	},
 	"no_bridges": "No bridges connected",
 	"unreachable": "Unreachable",
 	"all_lights": "All lights"

@@ -1,36 +1,49 @@
 'use strict';
 
 const Homey = require('homey');
-const Log = require('homey-log').Log;
-const huejay = require('huejay');
+const HueDiscovery = require('./lib/HueDiscovery.js');
 
-const Discovery = require('./lib/Discovery.js');
-
-class App extends Homey.App {
+module.exports = class HueApp extends Homey.App {
 	
 	onInit() {
 		this.log(`${Homey.app.manifest.id} is running...`);
 		
-		this._onBridge = this._onBridge.bind(this);
+		/*
 		this._onFlowActionSetScene = this._onFlowActionSetScene.bind(this);
 		this._onFlowActionGroupOn = this._onFlowActionGroupOn.bind(this);
 		this._onFlowActionGroupOff = this._onFlowActionGroupOff.bind(this);
 		this._onSceneAutocomplete = this._onSceneAutocomplete.bind(this);
 		this._onGroupAutocomplete = this._onGroupAutocomplete.bind(this);
-		
-		/*
-			Initialize Discovery
 		*/
-		this._discovery = new Discovery();
+		
+		this._initDiscovery();
+		//this._initFlow();	
+	}
+	
+	_initDiscovery() {
+		this._discovery = new HueDiscovery();
 		this._discovery
-			.on('__log', this.log.bind( this, '[Discovery]'))
-			.on('__error', this.error.bind( this, '[Discovery]'))
-			.on('bridge', this._onBridge)
-			.start();
-			
-		/*
-			Initialize Flow
-		*/			
+			.on('__log', (...args) => this.log('[Discovery]', ...args))
+			.on('__error', (...args) => this.error('[Discovery]', ...args))
+			.on('bridge', this._onDiscoveryBridge)
+			.start();  	
+	}
+	
+	_onDiscoveryBridge( bridge ) {
+    this.log(`Found bridge: ${bridge.id}@${bridge.address}`);
+    
+    bridge.token = Homey.ManagerSettings.get(`bridge_token_${bridge.id}`);
+    console.log('bridge.token', bridge.token)
+    bridge
+			.on('__log', (...args) => this.log('[Bridge]', `[${bridge.id}]`, ...args))
+			.on('__error', (...args) => this.error('[Bridge]' `[${bridge.id}]`, ...args))
+      .init()
+      .catch(err => {
+        this.error(`Bridge ${bridge.id} init failed:`, err);
+      });
+	}
+	
+	_initFlow() {
 		new Homey.FlowCardAction('setScene')
 			.register()
 			.registerRunListener( this._onFlowActionSetScene )
@@ -47,15 +60,15 @@ class App extends Homey.App {
 			.register()
 			.registerRunListener( this._onFlowActionGroupOff )
 			.getArgument('group')
-			.registerAutocompleteListener( this._onGroupAutocomplete );
+			.registerAutocompleteListener( this._onGroupAutocomplete );  	
 	}
 	
 	getBridges() {
 		return this._discovery.getBridges();
 	}
 	
-	getBridge( bridgeId ) {
-		return this._discovery.getBridge( bridgeId );
+	getBridge(id) {
+		return this._discovery.getBridge(id);
 	}
 	
 	_onBridge( bridge ) {
@@ -225,11 +238,9 @@ class App extends Homey.App {
 
 	getDeviceData( bridge, device ) {
 		return {
-			id			: device.uniqueId,
-			bridge_id	: bridge.id
+			id: device.uniqueId,
+			bridge_id: bridge.id
 		}
 	}
 	
 }
-
-module.exports = App;

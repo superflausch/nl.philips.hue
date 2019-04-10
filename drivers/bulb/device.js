@@ -1,18 +1,18 @@
 'use strict';
 
 const Homey = require('homey');
-const Device = require('../../lib/Device.js');
+const HueDevice = require('../../lib/HueDevice.js');
 
 const CAPABILITIES_MAP = {
-	'onoff'				: 'on',
-	'dim'				: 'brightness',
-	'light_hue'			: 'hue',
-	'light_saturation'	: 'saturation',
-	'light_temperature'	: 'colorTemp',
-	'light_mode'		: 'colorMode'
-}
+	'onoff': 'on',
+	'dim': 'brightness',
+	'light_hue': 'hue',
+	'light_saturation': 'saturation',
+	'light_temperature': 'colorTemp',
+	'light_mode': 'colorMode'
+};
 
-class DeviceBulb extends Device {
+module.exports = class DeviceBulb extends HueDevice {
 	
 	_onSync() {	
 		super._onSync();
@@ -200,5 +200,3 @@ class DeviceBulb extends Device {
 
 	}
 }
-
-module.exports = DeviceBulb;
