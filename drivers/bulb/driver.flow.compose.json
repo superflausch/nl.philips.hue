@@ -1,0 +1,43 @@
+{
+  "actions": [
+    {
+      "id": "shortAlert",
+      "title": {
+        "en": "Blink the light (short)",
+        "nl": "Knipper de lamp (kort)"
+      }
+    },
+    {
+      "id": "longAlert",
+      "title": {
+        "en": "Blink the light (long)",
+        "nl": "Knipper de lamp (lang)"
+      }
+    },
+    {
+      "id": "startColorLoop",
+      "title": {
+        "en": "Start colorloop effect",
+        "nl": "Begin kleur effect"
+      },
+      "$filter": "capabilities=light_hue"
+    },
+    {
+      "id": "stopColorLoop",
+      "title": {
+        "en": "Stop colorloop effect",
+        "nl": "Stop kleur effect"
+      },
+      "$filter": "capabilities=light_hue"
+    },
+    {
+      "id": "setRandomColor",
+      "deprecated": true,
+      "title": {
+        "en": "Set random color",
+        "nl": "Kies willekeurige kleur"
+      },
+      "$filter": "capabilities=light_hue"
+    }
+  ]
+}

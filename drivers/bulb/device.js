@@ -32,10 +32,20 @@ module.exports = class DeviceBulb extends HueDevice {
     }
   }
   
+  async setLightState(state) {  
+    return this.bridge.setLightState({
+      state,
+      id: this.id,
+    });    
+  }
+  
   async onMultipleCapabilities(valueObj, optsObj) {
     //this.log('onMultipleCapabilities', valueObj, optsObj)
     
-    const state = {};
+    const state = {
+      effect: 'none',
+      alert: 'none',
+    };
     
     // Calculate capabilities  
     if( typeof valueObj.dim === 'number' ) {
@@ -70,95 +80,56 @@ module.exports = class DeviceBulb extends HueDevice {
         state['transitionTime'] = optsObj[key].duration / 1000;
       }
     }
-            
-    return this.bridge.setLightState({
-      state,
-      id: this.id,
+    
+    if(!Object.keys(state).length) return;
+    return this.setLightState(state);
+  }
+  
+  /*
+   * Flow methods
+   */
+   
+  async shortAlert() {
+    return this.setLightState({
+      alert: 'select',
     });
   }
   
-  shortAlert() {
-    if( this._device instanceof Error )
-      return Promise.reject(this._device);
-      
-    this._device.alert = 'select';
-        
-    return this._saveDevice();
+  async longAlert() {
+    return this.setLightState({
+      alert: 'lselect',
+    });
   }
   
-  longAlert() {
-    if( this._device instanceof Error )
-      return Promise.reject(this._device);
-      
-    this._device.alert = 'lselect';
-        
-    return this._saveDevice();
+  async startColorLoop() {
+    await this.setLightState({
+      on: true,
+      effect: 'colorloop',
+      alert: 'none',
+    });
+    await this.setCapabilityValue('onoff', true);
   }
   
-  startColorLoop() {
-    if( this._device instanceof Error )
-      return Promise.reject(this._device);
-      
-    this._device.effect = 'colorloop';
-    this._device.alert = 'none';
-    
-    return this._onCapabilitiesSet({
-      onoff: true
-    }, {});    
+  async stopColorLoop() {
+    return this.setLightState({
+      effect: 'none',
+      alert: 'none',
+    });
   }
   
-  stopColorLoop() {
-    if( this._device instanceof Error )
-      return Promise.reject(this._device);
-    
-    this._device.effect = 'none';
-    this._device.alert = 'none';
-    
-    return this._onCapabilitiesSet({
-      onoff: true
-    }, {});
-  }
-  
-  setRandomColor() {
-    if( this._device instanceof Error )
-      return Promise.reject(this._device);
-
+  async setRandomColor({ duration }) {
     const onoff = true;
     const light_saturation = 1;
     const light_hue = Math.random();
     const light_mode = 'color';
     
-    this._device.effect = 'none';
-    this._device.alert = 'none';
-    
-    return this._onCapabilitiesSet({
+    return this.onMultipleCapabilities({
       onoff,
       light_saturation,
       light_hue,
       light_mode
-    }, {});
-    
-  }
-
-  brightnessIncrement( brightness, duration ) {
-    if( this._device instanceof Error )
-      return Promise.reject(this._device);
-    
-    const settingKey = 'notification_brightness_increment_deprecated';
-    if( Homey.ManagerSettings.get(settingKey) !== true ) {
-      Homey.ManagerSettings.set(settingKey, true);
-      
-      new Homey.Notification({
-        excerpt: Homey.__('notification.brightness_increment_deprecated')
-      })
-        .register()
-        .catch( this.error );
-    }
-    
-    return this._onCapabilitiesSet({
-      dim: brightness
     }, {
-      dim: { duration }
+      light_hue: duration,
     });
   }
   
