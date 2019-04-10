@@ -71,7 +71,7 @@ module.exports = class HueApp extends Homey.App {
     bridge.token = Homey.ManagerSettings.get(`bridge_token_${bridge.id}`);
     bridge
 			.on('__log', (...args) => this.log('[Bridge]', `[${bridge.id}]`, ...args))
-			.on('__error', (...args) => this.error('[Bridge]' `[${bridge.id}]`, ...args))
+			.on('__error', (...args) => this.error('[Bridge]', `[${bridge.id}]`, ...args))
       .init()
       .then(() => {
         this.emit(`bridge_${bridge.id}`, bridge);

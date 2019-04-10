@@ -13,6 +13,14 @@ const CAPABILITIES_MAP = {
 };
 
 module.exports = class DeviceBulb extends HueDevice {
+  
+  onHueInit() {
+    
+  }
+  
+  onPoll({ device }) {
+    console.log('onPoll', this.getName(), device.name)
+  }
 	
 	_onSync() {	
 		super._onSync();
