@@ -15,7 +15,8 @@ const CAPABILITIES_MAP = {
 module.exports = class DeviceBulb extends HueDevice {
   
   onHueInit() {
-  
+    const capabilities = this.getCapabilities();
+    this.registerMultipleCapabilityListener(capabilities, this.onMultipleCapabilities.bind(this));
   }
   
   onPoll({ device }) {    
@@ -31,8 +32,12 @@ module.exports = class DeviceBulb extends HueDevice {
     }
   }
   
-  _onCapabilitiesSet( valueObj, optsObj ) {  
-        
+  async onMultipleCapabilities(valueObj, optsObj) {
+    //this.log('onMultipleCapabilities', valueObj, optsObj)
+    
+    const state = {};
+    
+    // Calculate capabilities  
     if( typeof valueObj.dim === 'number' ) {
       valueObj.onoff = valueObj.dim > 0;  
     }
@@ -40,13 +45,13 @@ module.exports = class DeviceBulb extends HueDevice {
     for( let capabilityId in CAPABILITIES_MAP ) {
       if( !this.hasCapability(capabilityId) ) continue;
       
-      let propertyId = CAPABILITIES_MAP[capabilityId];
+      const propertyId = CAPABILITIES_MAP[capabilityId];
       let capabilityValue = valueObj[capabilityId];
       if( typeof capabilityValue === 'undefined' ) capabilityValue = this.getCapabilityValue(capabilityId);
-      let convertedValue = DeviceBulb.convertValue(capabilityId, 'set', capabilityValue);
+      let convertedValue = this.constructor.convert(capabilityId, 'set', capabilityValue);
       
       // only send properties for the current light_mode, so the bulb switches accordingly
-      let lightMode = valueObj['light_mode'] || this.getCapabilityValue('light_mode');
+      const lightMode = valueObj['light_mode'] || this.getCapabilityValue('light_mode');
       if( lightMode === 'temperature' ) {
         if( capabilityId === 'light_hue' || capabilityId === 'light_saturation' ) convertedValue = null;
       } else if( lightMode === 'color' ) {
@@ -55,23 +60,21 @@ module.exports = class DeviceBulb extends HueDevice {
             
       if( convertedValue === null ) continue;
       
-      try {
-        this._device[propertyId] = convertedValue;
-        this.setCapabilityValue(capabilityId, capabilityValue)
-          .catch( this.error );
-      } catch( err ) {
-        this.error( err );
-      }
+      state[propertyId] = convertedValue;
+      this.setCapabilityValue(capabilityId, capabilityValue).catch(this.error);
     }
     
+    // Add transition
     for( let key in optsObj ) {
       if( typeof optsObj[key].duration === 'number' ) {
-        this._device.transitionTime = optsObj[key].duration / 1000;
+        state['transitionTime'] = optsObj[key].duration / 1000;
       }
     }
-        
-    return this._saveDevice();
-    
+            
+    return this.bridge.setLightState({
+      state,
+      id: this.id,
+    });
   }
   
   shortAlert() {
