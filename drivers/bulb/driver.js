@@ -69,14 +69,8 @@ module.exports = class DriverBulb extends HueDriver {
     
     return obj;
   }
-	
-	onInit() {
-		super.onInit();
-		
-		/*
-			Initialize Flow
-		*/
-		/*
+  
+  onInitFlow() {
 		new Homey.FlowCardAction('shortAlert')
 			.register()
 			.registerRunListener( args => args.device.shortAlert() );
@@ -96,6 +90,5 @@ module.exports = class DriverBulb extends HueDriver {
 		new Homey.FlowCardAction('setRandomColor')
 			.register()
 			.registerRunListener( args => args.device.setRandomColor() );
-		*/
-	}
+  }
 }
