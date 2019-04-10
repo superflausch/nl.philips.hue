@@ -8,6 +8,8 @@ module.exports = class HueApp extends Homey.App {
 	onInit() {
 		this.log(`${Homey.app.manifest.id} is running...`);
 		
+		this._onDiscoveryBridge = this._onDiscoveryBridge.bind(this);
+		
 		/*
 		this._onFlowActionSetScene = this._onFlowActionSetScene.bind(this);
 		this._onFlowActionGroupOn = this._onFlowActionGroupOn.bind(this);
@@ -16,11 +18,11 @@ module.exports = class HueApp extends Homey.App {
 		this._onGroupAutocomplete = this._onGroupAutocomplete.bind(this);
 		*/
 		
-		this._initDiscovery();
-		//this._initFlow();	
+		this.onInitDiscovery();
+		//this.onInitFlow();	
 	}
 	
-	_initDiscovery() {
+	onInitDiscovery() {
 		this._discovery = new HueDiscovery();
 		this._discovery
 			.on('__log', (...args) => this.log('[Discovery]', ...args))
@@ -29,20 +31,7 @@ module.exports = class HueApp extends Homey.App {
 			.start();  	
 	}
 	
-	_onDiscoveryBridge( bridge ) {
-    this.log(`Found bridge: ${bridge.id}@${bridge.address}`);
-    
-    bridge.token = Homey.ManagerSettings.get(`bridge_token_${bridge.id}`);
-    bridge
-			.on('__log', (...args) => this.log('[Bridge]', `[${bridge.id}]`, ...args))
-			.on('__error', (...args) => this.error('[Bridge]' `[${bridge.id}]`, ...args))
-      .init()
-      .catch(err => {
-        this.error(`Bridge ${bridge.id} init failed:`, err);
-      });
-	}
-	
-	_initFlow() {
+	onInitFlow() {
 		new Homey.FlowCardAction('setScene')
 			.register()
 			.registerRunListener( this._onFlowActionSetScene )
@@ -66,26 +55,33 @@ module.exports = class HueApp extends Homey.App {
 		return this._discovery.getBridges();
 	}
 	
-	getBridge(id) {
-		return this._discovery.getBridge(id);
+	async getBridge(id) {
+  	  try {
+      return this._discovery.getBridge(id);
+		} catch( err ) {
+  		  return new Promise(resolve => {
+    		  this.once(`bridge_${id}`, resolve);
+  		  });
+		}
 	}
 	
-	_onBridge( bridge ) {
-		bridge
-			.on('__log', this.log.bind( this, `[Bridge][${bridge.id}]`))
-			.on('__error', this.error.bind( this, `[Bridge][${bridge.id}]`))
-			.on('available', () => {
-				this.emit(`bridge_${bridge.id}`, bridge);
-			})
-			.init()
-			.catch(err => {
-				if( err && err.message === 'no_token' )
-					return this.error(`Bridge ${bridge.id} is not yet authorized`);
-					
-				this.error(err);
-			});
+	_onDiscoveryBridge( bridge ) {
+    this.log(`Discovered bridge: ${bridge.id}@${bridge.address}`);
+    
+    bridge.token = Homey.ManagerSettings.get(`bridge_token_${bridge.id}`);
+    bridge
+			.on('__log', (...args) => this.log('[Bridge]', `[${bridge.id}]`, ...args))
+			.on('__error', (...args) => this.error('[Bridge]' `[${bridge.id}]`, ...args))
+      .init()
+      .then(() => {
+        this.emit(`bridge_${bridge.id}`, bridge);
+      })
+      .catch(err => {
+        this.error(`Bridge ${bridge.id} init failed:`, err);
+      });
 	}
 	
+	/*
 	_onFlowActionSetScene( args ) {
 		let bridge = this.getBridge( args.scene.bridge_id );
 		if( bridge instanceof Error ) return Promise.reject( bridge );
@@ -234,12 +230,6 @@ module.exports = class HueApp extends Homey.App {
 			});
 		
 	}
-
-	getDeviceData( bridge, device ) {
-		return {
-			id: device.uniqueId,
-			bridge_id: bridge.id
-		}
-	}
+	*/
 	
 }

@@ -9,6 +9,7 @@
 			"description": "Press the button on your Philips Hue bridge"
 		}
 	},
+	"loading": "Searching for Hue Bridge...",
 	"no_bridges": "No bridges connected",
 	"unreachable": "Unreachable",
 	"all_lights": "All lights"
