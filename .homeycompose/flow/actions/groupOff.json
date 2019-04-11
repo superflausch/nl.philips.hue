@@ -1,0 +1,12 @@
+{
+  "title": {
+    "en": "Turn all lights off in a room",
+    "nl": "Zet alle lampen uit in een ruimte"
+  },
+  "args": [
+    {
+      "name": "group",
+      "type": "autocomplete"
+    }
+  ]
+}

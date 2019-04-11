@@ -29,6 +29,66 @@
   "flow": {
     "actions": [
       {
+        "title": {
+          "en": "Turn all lights off in a room",
+          "nl": "Zet alle lampen uit in een ruimte"
+        },
+        "args": [
+          {
+            "name": "group",
+            "type": "autocomplete"
+          }
+        ],
+        "id": "groupOff"
+      },
+      {
+        "title": {
+          "en": "Turn all lights on in a room",
+          "nl": "Zet alle lampen aan in een ruimte"
+        },
+        "args": [
+          {
+            "name": "group",
+            "type": "autocomplete"
+          }
+        ],
+        "id": "groupOn"
+      },
+      {
+        "title": {
+          "en": "Set brightness of all lights in a room",
+          "nl": "Zet de helderheid van alle lampen in een ruimte"
+        },
+        "args": [
+          {
+            "name": "group",
+            "type": "autocomplete"
+          },
+          {
+            "name": "brightness",
+            "type": "range",
+            "min": 0,
+            "max": 100,
+            "step": 1,
+            "label": "%"
+          }
+        ],
+        "id": "groupSetBrightness"
+      },
+      {
+        "title": {
+          "en": "Set a scene",
+          "nl": "Activeer een scene"
+        },
+        "args": [
+          {
+            "name": "scene",
+            "type": "autocomplete"
+          }
+        ],
+        "id": "setScene"
+      },
+      {
         "id": "shortAlert",
         "title": {
           "en": "Blink the light (short)",

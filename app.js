@@ -2,71 +2,75 @@
 
 const Homey = require('homey');
 const HueDiscovery = require('./lib/HueDiscovery.js');
+const HueError = require('./lib/HueError.js');
 
 module.exports = class HueApp extends Homey.App {
   
   onInit() {
     this.log(`${Homey.app.manifest.id} is running...`);
     
-    this._onDiscoveryBridge = this._onDiscoveryBridge.bind(this);
-    
     this.bridges = {};
     
-    /*
-    this._onFlowActionSetScene = this._onFlowActionSetScene.bind(this);
-    this._onFlowActionGroupOn = this._onFlowActionGroupOn.bind(this);
-    this._onFlowActionGroupOff = this._onFlowActionGroupOff.bind(this);
-    this._onSceneAutocomplete = this._onSceneAutocomplete.bind(this);
-    this._onGroupAutocomplete = this._onGroupAutocomplete.bind(this);
-    */
+    this.onDiscoveryBridge = this.onDiscoveryBridge.bind(this);
+    this.onFlowActionSetScene = this.onFlowActionSetScene.bind(this);
+    this.onFlowActionGroupOn = this.onFlowActionGroupOn.bind(this);
+    this.onFlowActionGroupOff = this.onFlowActionGroupOff.bind(this);
+    this.onFlowSceneAutocomplete = this.onFlowSceneAutocomplete.bind(this);
+    this.onFlowGroupAutocomplete = this.onFlowGroupAutocomplete.bind(this);
+    this.onFlowActionGroupSetBrightness = this.onFlowActionGroupSetBrightness.bind(this);
     
     this.onInitDiscovery();
-    //this.onInitFlow();  
+    this.onInitFlow();  
   }
   
   onInitDiscovery() {
-    this._discovery = new HueDiscovery();
-    this._discovery
+    this.discovery = new HueDiscovery();
+    this.discovery
       .on('__log', (...args) => this.log('[Discovery]', ...args))
       .on('__error', (...args) => this.error('[Discovery]', ...args))
-      .on('bridge', this._onDiscoveryBridge)
+      .on('bridge', this.onDiscoveryBridge)
       .start();    
   }
   
   onInitFlow() {
     new Homey.FlowCardAction('setScene')
       .register()
-      .registerRunListener( this._onFlowActionSetScene )
+      .registerRunListener( this.onFlowActionSetScene )
       .getArgument('scene')
-      .registerAutocompleteListener( this._onSceneAutocomplete );
+      .registerAutocompleteListener( this.onFlowSceneAutocomplete );
       
     new Homey.FlowCardAction('groupOn')
       .register()
-      .registerRunListener( this._onFlowActionGroupOn )
+      .registerRunListener( this.onFlowActionGroupOn )
       .getArgument('group')
-      .registerAutocompleteListener( this._onGroupAutocomplete );
+      .registerAutocompleteListener( this.onFlowGroupAutocomplete );
       
     new Homey.FlowCardAction('groupOff')
       .register()
-      .registerRunListener( this._onFlowActionGroupOff )
+      .registerRunListener( this.onFlowActionGroupOff )
       .getArgument('group')
-      .registerAutocompleteListener( this._onGroupAutocomplete );    
+      .registerAutocompleteListener( this.onFlowGroupAutocomplete );  
+      
+    new Homey.FlowCardAction('groupSetBrightness')
+      .register()
+      .registerRunListener( this.onFlowActionGroupSetBrightness )
+      .getArgument('group')
+      .registerAutocompleteListener( this.onFlowGroupAutocomplete );      
   }
   
-  getBridges() {
-    return this.bridges;
-  }
-  
-  async getBridge(id) {
+  async getBridge(id, wait = true) {
     const bridge = this.bridges[id];
     if(bridge) return bridge;
+    
+    if(!wait)
+      throw new HueError('bridge_unavailable');
     
     return new Promise(resolve => {
       this.once(`bridge_${id}`, resolve);
     });
   }
   
-  _onDiscoveryBridge( bridge ) {
+  onDiscoveryBridge( bridge ) {
     this.log(`Discovered bridge: ${bridge.id}@${bridge.address}`);
     
     bridge.token = Homey.ManagerSettings.get(`bridge_token_${bridge.id}`);
@@ -83,155 +87,115 @@ module.exports = class HueApp extends Homey.App {
       });
   }
   
-  /*
-  _onFlowActionSetScene( args ) {
-    let bridge = this.getBridge( args.scene.bridge_id );
-    if( bridge instanceof Error ) return Promise.reject( bridge );
-
-    return bridge.setScene( args.scene.id );    
+  async onFlowActionSetScene( args ) {
+    const bridge = await this.getBridge(args.scene.bridge_id, false);
+    return bridge.setScene({ id: args.scene.id });
   }
   
-  _onFlowActionGroupOn( args ) {
-    this._onFlowActionGroup( args, true );    
-  }
-  
-  _onFlowActionGroupOff( args ) {
-    this._onFlowActionGroup( args, false );
-  }
-  
-  _onFlowActionGroup( args, onoff ) {
-    let bridge = this.getBridge( args.group.bridge_id );
-    if( bridge instanceof Error ) return Promise.reject( bridge );
-
-    return bridge.getGroup( args.group.id )
-      .then(group => {
-        group.on = onoff;
-        return bridge.saveGroup( group )
-      })
-      .then(group => {
-        let lights = bridge.getLights();
-        let driver = Homey.ManagerDrivers.getDriver('bulb');
-
-        for( let lightId in lights ) {
-          let light = lights[lightId];
-          
-          if( group.lightIds.indexOf( light.id.toString() ) > -1 ) {
-            let device = driver.getDevice( this.getDeviceData( bridge, light ));
-            if( device instanceof Error ) continue;
-            
-            device.setCapabilityValue('onoff', onoff);
-          }
-        }
-      });
-  }
-  
-  _onSceneAutocomplete( query ) {
+  async onFlowSceneAutocomplete( query ) {    
+    if( !Object.keys(this.bridges).length )
+      throw new HueError('no_bridges');
     
-    const calls = [];
-    const bridges = this.getBridges();
-
-    if( Object.keys(bridges).length < 1 )
-      return Promise.reject( new Error( __("no_bridges") ) );
-
-
-    for( let bridgeId in bridges ) {
-      let bridge = bridges[ bridgeId ];
-
-      let call = bridge.getScenes()
+    const fns = Object.values(this.bridges).map(bridge => {
+      return bridge.getScenes()
         .then(scenes => ({ bridge, scenes }))
-        .catch(err => {
-          return err;
-        })
-      calls.push( call );
-    }
+        .catch(err => err);
+    });
 
-    return Promise.all( calls )
-      .then( results => {
+    return Promise.all(fns).then(results => {
+      const resultArray = [];
 
-        let resultArray = [];
-  
-        results.forEach((result) => {
-          if( result instanceof Error ) return;
-  
-          let bridge = result.bridge;
-          result.scenes.forEach((scene) => {
-            resultArray.push({
-              bridge_id      : bridge.id,
-              name        : scene.name.split(' on ')[0],
-              id          : scene.id,
-              description      : bridge.name,
-              description_icon  : bridge.icon
-            })
-          });
-        });
-  
-        resultArray = resultArray.filter(( resultArrayItem ) => {
-          return resultArrayItem.name.toLowerCase().indexOf( query.toLowerCase() ) > -1;
-        });
+      results.forEach(result => {
+        if( result instanceof Error ) return;
+        const { bridge, scenes } = result;
         
-        return resultArray;
-      });
-    
-  }
-  
-  _onGroupAutocomplete( query ) {
-    
-    const calls = [];
-    const bridges = this.getBridges();
-
-    if( Object.keys(bridges).length < 1 )
-      return Promise.reject( new Error( __("no_bridges") ) );
-
-
-    for( let bridgeId in bridges ) {
-      let bridge = bridges[ bridgeId ];
-
-      let call = bridge.getGroups()
-        .then(groups => ({ bridge, groups }))
-        .catch(err => {
-          return err;
-        })
-      calls.push( call );
-    }
-
-    return Promise.all( calls )
-      .then( results => {
-    
-        let resultArray = [];
-            
-        results.forEach(result => {
-          if( result instanceof Error ) return;
-    
-          let bridge = result.bridge;
-    
+        Object.keys(scenes).forEach(sceneId => {
+          const scene = scenes[sceneId];
           resultArray.push({
-            bridge_id      : bridge.id,
-            name        : Homey.__('all_lights'),
-            id          : 0,
-            description      : bridge.name,
-            description_icon  : bridge.icon
-          });
-    
-          result.groups.forEach((group) => {
-            resultArray.push({
-              bridge_id      : bridge.id,
-              name        : group.name,
-              id          : group.id,
-              description      : bridge.name,
-              description_icon  : bridge.icon
-            })
-          });
-    
+            id: sceneId,
+            bridge_id: bridge.id,
+            name: scene.name.split(' on ')[0],
+            description: bridge.name,
+          })
         });
-    
-        resultArray = resultArray.filter(( resultArrayItem ) => {
-          return resultArrayItem.name.toLowerCase().indexOf( query.toLowerCase() ) > -1;
-        });
-        
-        return resultArray;
       });
-    
+      
+      return resultArray.filter(resultArrayItem => {
+        return resultArrayItem.name.toLowerCase().includes( query.toLowerCase() );
+      });
+    });    
   }
-  */
+  
+  async onFlowActionGroupOn( args ) {
+    const bridge = await this.getBridge(args.group.bridge_id, false);
+    return bridge.setGroupState({
+      id: args.group.id,
+      state: {
+        on: true,
+      },
+    });
+  }
+  
+  async onFlowActionGroupOff( args ) {
+    const bridge = await this.getBridge(args.group.bridge_id, false);
+    return bridge.setGroupState({
+      id: args.group.id,
+      state: {
+        on: false,
+      },
+    });
+  }
+  
+  async onFlowActionGroupSetBrightness( args ) {
+    const bridge = await this.getBridge(args.group.bridge_id, false);
+    return bridge.setGroupState({
+      id: args.group.id,
+      state: {
+        on: true,
+        bri: parseInt(args.brightness / 100 * 255),
+      },
+    });
+  }
+  
+  async onFlowGroupAutocomplete( query ) {
+    if( !Object.keys(this.bridges).length )
+      throw new HueError('no_bridges');
+    
+    const fns = Object.values(this.bridges).map(bridge => {
+      return bridge.getGroups()
+        .then(groups => ({ bridge, groups }))
+        .catch(err => err);
+    });
+
+    return Promise.all(fns).then(results => {
+      const resultArray = [];
+
+      results.forEach(result => {
+        if( result instanceof Error ) return;
+        const { bridge, groups } = result;
+    
+        resultArray.push({
+          id: 0,
+          bridge_id: bridge.id,
+          name: Homey.__('all_lights'),
+          description: bridge.name,
+        });        
+        
+        Object.keys(groups).forEach(groupId => {
+          const group = groups[groupId];
+          resultArray.push({
+            id: groupId,
+            bridge_id: bridge.id,
+            name: group.name,
+            description: bridge.name,
+          })
+        });
+      });
+      
+      return resultArray.filter(resultArrayItem => {
+        return resultArrayItem.name.toLowerCase().includes( query.toLowerCase() );
+      });
+    });    
+  }
   
 }
