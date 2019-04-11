@@ -151,7 +151,7 @@ module.exports = class HueApp extends Homey.App {
     return bridge.setGroupState({
       id: args.group.id,
       state: {
-        on: true,
+        on: args.brightness !== 0,
         bri: parseInt(args.brightness / 100 * 255),
       },
     });
