@@ -1,0 +1,47 @@
+{
+  "triggers": [
+    {
+      "id": "tap_button_pressed",
+      "title": {
+        "en": "A button is pressed",
+        "nl": "Een knop is ingedrukt"
+      },
+      "args": [
+        {
+          "name": "button",
+          "type": "dropdown",
+          "values": [
+            {
+              "id": "button1",
+              "label": {
+                "en": "Button 1",
+                "nl": "Knop 1"
+              }
+            },
+            {
+              "id": "button2",
+              "label": {
+                "en": "Button 2",
+                "nl": "Knop 2"
+              }
+            },
+            {
+              "id": "button3",
+              "label": {
+                "en": "Button 3",
+                "nl": "Knop 3"
+              }
+            },
+            {
+              "id": "button4",
+              "label": {
+                "en": "Button 4",
+                "nl": "Knop 4"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

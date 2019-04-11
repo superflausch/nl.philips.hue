@@ -1,0 +1,9 @@
+{
+  "$extends": "hue",
+  "name": {
+    "en": "Dimmer Switch",
+    "nl": "Dimmer Switch"
+  },
+  "class": "sensor",
+  "capabilities": [ "measure_battery" ]
+}

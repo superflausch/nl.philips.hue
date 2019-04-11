@@ -45,6 +45,10 @@ const ICONS_MAP = {
 
 module.exports = class DriverBulb extends HueDriver {
   
+  static get HUE_TYPE() {
+    return 'light';
+  }
+  
   static onPairGetDevices({ bridge }) {
     return bridge.getLights.bind(bridge);
   }
@@ -56,16 +60,11 @@ module.exports = class DriverBulb extends HueDriver {
     const modelid = device.modelid;
     
     const capabilities = CAPABILITIES_MAP[type];
-    if( capabilities ) {
-      obj.capabilities = capabilities;      
-    } else {
-      throw new Error('Unsupported Type');
-    }
+    if( !capabilities ) return null;
+    obj.capabilities = capabilities;
     
     const icon = ICONS_MAP[modelid];
-    if( icon ) {
-      obj.icon = `/icons/${icon}.svg`;    
-    }
+    if( icon ) obj.icon = `/icons/${icon}.svg`;
     
     return obj;
   }

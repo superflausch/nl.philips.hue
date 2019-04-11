@@ -21,6 +21,7 @@ module.exports = class DeviceBulb extends HueDevice {
   
   onPoll({ device }) {   
     super.onPoll(...arguments);
+    if(!device.state) return;
      
     for( const capabilityId in CAPABILITIES_MAP ) {
       if( !this.hasCapability(capabilityId) ) continue;

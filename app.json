@@ -99,6 +99,104 @@
           }
         ]
       }
+    ],
+    "triggers": [
+      {
+        "id": "dimmerswitch_button_pressed",
+        "title": {
+          "en": "A button is pressed",
+          "nl": "Een knop is ingedrukt"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=dimmerswitch"
+          },
+          {
+            "name": "button",
+            "type": "dropdown",
+            "values": [
+              {
+                "id": "on",
+                "label": {
+                  "en": "On",
+                  "nl": "Aan"
+                }
+              },
+              {
+                "id": "increase_brightness",
+                "label": {
+                  "en": "Increase brightness",
+                  "nl": "Verhoog helderheid"
+                }
+              },
+              {
+                "id": "decrease_brightness",
+                "label": {
+                  "en": "Decrease brightness",
+                  "nl": "Verlaag helderheid"
+                }
+              },
+              {
+                "id": "off",
+                "label": {
+                  "en": "Off",
+                  "nl": "Uit"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "tap_button_pressed",
+        "title": {
+          "en": "A button is pressed",
+          "nl": "Een knop is ingedrukt"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=tap"
+          },
+          {
+            "name": "button",
+            "type": "dropdown",
+            "values": [
+              {
+                "id": "button1",
+                "label": {
+                  "en": "Button 1",
+                  "nl": "Knop 1"
+                }
+              },
+              {
+                "id": "button2",
+                "label": {
+                  "en": "Button 2",
+                  "nl": "Knop 2"
+                }
+              },
+              {
+                "id": "button3",
+                "label": {
+                  "en": "Button 3",
+                  "nl": "Knop 3"
+                }
+              },
+              {
+                "id": "button4",
+                "label": {
+                  "en": "Button 4",
+                  "nl": "Knop 4"
+                }
+              }
+            ]
+          }
+        ]
+      }
     ]
   },
   "drivers": [
@@ -175,6 +273,100 @@
         }
       },
       "id": "bulb"
+    },
+    {
+      "images": {
+        "large": "/drivers/dimmerswitch/assets/images/large.jpg",
+        "small": "/drivers/dimmerswitch/assets/images/small.jpg"
+      },
+      "pair": [
+        {
+          "id": "list_bridges",
+          "template": "list_devices",
+          "options": {
+            "singular": true,
+            "title": {
+              "en": "Select your bridge..."
+            }
+          },
+          "navigation": {
+            "next": "check_authentication"
+          }
+        },
+        {
+          "id": "check_authentication",
+          "template": "loading"
+        },
+        {
+          "id": "authenticate"
+        },
+        {
+          "id": "list_devices",
+          "template": "list_devices",
+          "navigation": {
+            "next": "add_devices"
+          }
+        },
+        {
+          "id": "add_devices",
+          "template": "add_devices"
+        }
+      ],
+      "name": {
+        "en": "Dimmer Switch",
+        "nl": "Dimmer Switch"
+      },
+      "class": "sensor",
+      "capabilities": [
+        "measure_battery"
+      ],
+      "id": "dimmerswitch"
+    },
+    {
+      "images": {
+        "large": "/drivers/tap/assets/images/large.jpg",
+        "small": "/drivers/tap/assets/images/small.jpg"
+      },
+      "pair": [
+        {
+          "id": "list_bridges",
+          "template": "list_devices",
+          "options": {
+            "singular": true,
+            "title": {
+              "en": "Select your bridge..."
+            }
+          },
+          "navigation": {
+            "next": "check_authentication"
+          }
+        },
+        {
+          "id": "check_authentication",
+          "template": "loading"
+        },
+        {
+          "id": "authenticate"
+        },
+        {
+          "id": "list_devices",
+          "template": "list_devices",
+          "navigation": {
+            "next": "add_devices"
+          }
+        },
+        {
+          "id": "add_devices",
+          "template": "add_devices"
+        }
+      ],
+      "name": {
+        "en": "Tap",
+        "nl": "Tap"
+      },
+      "class": "other",
+      "capabilities": [],
+      "id": "tap"
     }
   ]
 }
