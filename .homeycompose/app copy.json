@@ -26,54 +26,8 @@
     "small": "assets/images/small.jpg"
   },
   "category": "lights",
-  "__drivers": [
-    {
-      "id": "motionsensor",
-      "name": {
-        "en": "Motion Sensor",
-        "nl": "Bewegingssensor"
-      },
-      "class": "sensor",
-      "capabilities": [
-        "alarm_motion",
-        "measure_temperature",
-        "measure_luminance",
-        "measure_battery"
-      ],
-      "images": {
-        "large": "drivers/motionsensor/assets/images/large.jpg",
-        "small": "drivers/motionsensor/assets/images/small.jpg"
-      },
-      "pair": [
-        {
-          "id": "select_bridge",
-          "navigation": {
-            "next": "press_button"
-          }
-        },
-        {
-          "id": "press_button"
-        },
-        {
-          "id": "list_devices",
-          "template": "list_devices",
-          "navigation": {
-            "next": "add_devices"
-          }
-        },
-        {
-          "id": "add_devices",
-          "template": "add_devices"
-        }
-      ]
-    }
-  ],
   "__flow": {
-    "triggers": [
-      {
-    ],
-    "actions": [
-      
+    "actions": [     
       
       {
         "id": "setScene",
@@ -114,34 +68,6 @@
           }
         ]
       },
-      {
-        "id": "enableMotionSensor",
-        "title": {
-          "en": "Enable sensor",
-          "nl": "Schakel sensor in"
-        },
-        "args": [
-          {
-            "name": "device",
-            "type": "device",
-            "filter": "driver_id=motionsensor"
-          }
-        ]
-      },
-      {
-        "id": "disableMotionSensor",
-        "title": {
-          "en": "Disable sensor",
-          "nl": "Schakel sensor uit"
-        },
-        "args": [
-          {
-            "name": "device",
-            "type": "device",
-            "filter": "driver_id=motionsensor"
-          }
-        ]
-      }
-    ]
+          ]
   }
 }

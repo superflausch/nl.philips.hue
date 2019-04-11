@@ -2,7 +2,7 @@
   "id": "nl.philips.hue",
   "version": "4.0.0",
   "brandColor": "#F4AF2E",
-  "compatibility": ">=2.0.0",
+  "compatibility": ">=2.1.0",
   "sdk": 2,
   "name": {
     "en": "Philips Hue"
@@ -96,6 +96,34 @@
             "type": "device",
             "name": "device",
             "filter": "driver_id=bulb&capabilities=light_hue"
+          }
+        ]
+      },
+      {
+        "id": "enableMotionSensor",
+        "title": {
+          "en": "Enable sensor",
+          "nl": "Schakel sensor in"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=motionsensor"
+          }
+        ]
+      },
+      {
+        "id": "disableMotionSensor",
+        "title": {
+          "en": "Disable sensor",
+          "nl": "Schakel sensor uit"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=motionsensor"
           }
         ]
       }
@@ -321,6 +349,57 @@
         "measure_battery"
       ],
       "id": "dimmerswitch"
+    },
+    {
+      "images": {
+        "large": "/drivers/motionsensor/assets/images/large.jpg",
+        "small": "/drivers/motionsensor/assets/images/small.jpg"
+      },
+      "pair": [
+        {
+          "id": "list_bridges",
+          "template": "list_devices",
+          "options": {
+            "singular": true,
+            "title": {
+              "en": "Select your bridge..."
+            }
+          },
+          "navigation": {
+            "next": "check_authentication"
+          }
+        },
+        {
+          "id": "check_authentication",
+          "template": "loading"
+        },
+        {
+          "id": "authenticate"
+        },
+        {
+          "id": "list_devices",
+          "template": "list_devices",
+          "navigation": {
+            "next": "add_devices"
+          }
+        },
+        {
+          "id": "add_devices",
+          "template": "add_devices"
+        }
+      ],
+      "name": {
+        "en": "Motion Sensor",
+        "nl": "Bewegingssensor"
+      },
+      "class": "sensor",
+      "capabilities": [
+        "alarm_motion",
+        "measure_temperature",
+        "measure_luminance",
+        "measure_battery"
+      ],
+      "id": "motionsensor"
     },
     {
       "images": {

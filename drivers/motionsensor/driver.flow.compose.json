@@ -1,0 +1,18 @@
+{
+  "actions": [
+    {
+      "id": "enableMotionSensor",
+      "title": {
+        "en": "Enable sensor",
+        "nl": "Schakel sensor in"
+      }
+    },
+    {
+      "id": "disableMotionSensor",
+      "title": {
+        "en": "Disable sensor",
+        "nl": "Schakel sensor uit"
+      }
+    }
+  ]
+}

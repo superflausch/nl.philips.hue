@@ -14,7 +14,7 @@ module.exports = class DriverDimmerSwitch extends HueDriver {
   }
   
   static onPairListDevice({ bridge, device }) {
-    bridge.log('Tap Device:', device.modelid, device.name);
+    bridge.log('Dimmer Switch Device:', device.modelid, device.name);
     
     if( !['RWL020', 'RWL021'].includes(device.modelid)) return null;
     return {};
