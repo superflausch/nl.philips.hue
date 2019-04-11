@@ -70,6 +70,7 @@
             "min": 0,
             "max": 100,
             "step": 1,
+            "decimals": 0,
             "label": "%"
           }
         ],
@@ -135,21 +136,6 @@
         "title": {
           "en": "Stop colorloop effect",
           "nl": "Stop kleur effect"
-        },
-        "args": [
-          {
-            "type": "device",
-            "name": "device",
-            "filter": "driver_id=bulb&capabilities=light_hue"
-          }
-        ]
-      },
-      {
-        "id": "setRandomColor",
-        "deprecated": true,
-        "title": {
-          "en": "Set random color",
-          "nl": "Kies willekeurige kleur"
         },
         "args": [
           {

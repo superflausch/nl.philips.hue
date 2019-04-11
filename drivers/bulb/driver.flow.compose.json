@@ -29,15 +29,6 @@
         "nl": "Stop kleur effect"
       },
       "$filter": "capabilities=light_hue"
-    },
-    {
-      "id": "setRandomColor",
-      "deprecated": true,
-      "title": {
-        "en": "Set random color",
-        "nl": "Kies willekeurige kleur"
-      },
-      "$filter": "capabilities=light_hue"
     }
   ]
 }

@@ -85,9 +85,5 @@ module.exports = class DriverBulb extends HueDriver {
 		new Homey.FlowCardAction('stopColorLoop')
 			.register()
 			.registerRunListener( args => args.device.stopColorLoop() );
-			
-		new Homey.FlowCardAction('setRandomColor')
-			.register()
-			.registerRunListener( args => args.device.setRandomColor() );
   }
 }

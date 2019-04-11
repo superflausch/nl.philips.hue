@@ -132,22 +132,6 @@ module.exports = class DeviceBulb extends HueDevice {
     });
   }
   
-  async setRandomColor({ duration }) {
-    const onoff = true;
-    const light_saturation = 1;
-    const light_hue = Math.random();
-    const light_mode = 'color';
-    
-    return this.onMultipleCapabilities({
-      onoff,
-      light_saturation,
-      light_hue,
-      light_mode
-    }, {
-      light_hue: duration,
-    });
-  }
-  
   static convert( capabilityId, direction, value ) {
     if( capabilityId === 'onoff' ) {
       if( direction === 'get' ) {
