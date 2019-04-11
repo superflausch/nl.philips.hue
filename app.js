@@ -152,7 +152,7 @@ module.exports = class HueApp extends Homey.App {
       id: args.group.id,
       state: {
         on: args.brightness !== 0,
-        bri: parseInt(args.brightness / 100 * 255),
+        bri: parseInt(Math.floor(args.brightness / 100 * 254)),
       },
     });
   }

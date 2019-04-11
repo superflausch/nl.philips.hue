@@ -139,20 +139,26 @@ module.exports = class DeviceBulb extends HueDevice {
       } else if( direction === 'set' ) {
         return value === true;
       }
-    } else if( capabilityId === 'dim' || capabilityId === 'light_saturation'  ) {
+    } else if( capabilityId === 'dim' || capabilityId === 'light_saturation'  ) {      
       if( direction === 'get' ) {
+        value = Math.max(0, value);
+        value = Math.min(254, value);
         return value / 254;
       } else if( direction === 'set' ) {
         return Math.ceil( value * 254 );
       }
-    } else if( capabilityId === 'light_hue' ) {
+    } else if( capabilityId === 'light_hue' ) {      
       if( direction === 'get' ) {
+        value = Math.max(0, value);
+        value = Math.min(65535, value);
         return value / 65535;
       } else if( direction === 'set' ) {
         return Math.ceil( value * 65535 );
       }
-    } else if( capabilityId === 'light_temperature' ) {
+    } else if( capabilityId === 'light_temperature' ) {      
       if( direction === 'get' ) {
+        value = Math.max(153, value);
+        value = Math.min(500, value);
         return ( value - 153 ) / ( 500 - 153 );
       } else if( direction === 'set' ) {
         return Math.ceil( 153 + value * ( 500 - 153 ) );
