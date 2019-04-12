@@ -59,6 +59,7 @@
           "en": "Set brightness of all lights in a room",
           "nl": "Zet de helderheid van alle lampen in een ruimte"
         },
+        "duration": true,
         "args": [
           {
             "name": "group",

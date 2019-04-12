@@ -148,12 +148,17 @@ module.exports = class HueApp extends Homey.App {
   
   async onFlowActionGroupSetBrightness( args ) {
     const bridge = await this.getBridge(args.group.bridge_id, false);
+    const state = {
+      on: args.brightness !== 0,
+      bri: parseInt(Math.floor(args.brightness / 100 * 254)),
+    };
+    
+    if( typeof args.duration === 'number' )
+      state.transitiontime = args.duration / 100;
+    
     return bridge.setGroupState({
+      state,
       id: args.group.id,
-      state: {
-        on: args.brightness !== 0,
-        bri: parseInt(Math.floor(args.brightness / 100 * 254)),
-      },
     });
   }
   
