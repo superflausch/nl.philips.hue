@@ -89,14 +89,15 @@ module.exports = class DeviceBulb extends HueDevice {
       this.setCapabilityValue(capabilityId, capabilityValue).catch(this.error);
     }
     
+    if(!Object.keys(state).length) return;
+    
     // Add transition
     for( let key in optsObj ) {
       if( typeof optsObj[key].duration === 'number' ) {
-        state['transitionTime'] = optsObj[key].duration / 1000;
+        state['transitiontime'] = optsObj[key].duration / 100;
       }
     }
     
-    if(!Object.keys(state).length) return;
     return this.setLightState(state);
   }
   
