@@ -1,6 +1,6 @@
 {
   "id": "nl.philips.hue",
-  "version": "4.0.1",
+  "version": "4.0.2",
   "brandColor": "#F4AF2E",
   "compatibility": ">=2.1.0",
   "sdk": 2,
