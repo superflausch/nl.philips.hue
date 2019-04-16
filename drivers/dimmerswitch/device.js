@@ -38,7 +38,9 @@ module.exports = class DeviceDimmerSwitch extends HueDevice {
         this.log(`Same button pressed [${device.state.buttonevent}]:`, button);
         
         if( button ) {
-          this.driver.flowCardTriggerDimmerSwitchButtonPressed.trigger(this, {}, { button }).catch(this.error);
+          this.driver.flowCardTriggerDimmerSwitchButtonPressed
+            .trigger(this, {}, { button })
+            .catch(this.error);
         }
       }
 
@@ -51,7 +53,9 @@ module.exports = class DeviceDimmerSwitch extends HueDevice {
         this.log(`New button pressed [${device.state.buttonevent}]:`, button);
         
         if( button ) {
-          this.driver.flowCardTriggerDimmerSwitchButtonPressed.trigger(this, {}, { button }).catch(this.error);
+          this.driver.flowCardTriggerDimmerSwitchButtonPressed
+            .trigger(this, {}, { button })
+            .catch(this.error);
         }
       }
     }

@@ -31,13 +31,13 @@ module.exports = class DeviceMotionSensor extends HueDevice {
           return this.setCapabilityValue('measure_luminance', null);
         
         const lightlevel = Math.pow( 10, ( sensor.state.lightlevel - 1 ) / 10000 );
-        this.setCapabilityValue('measure_luminance', lightlevel);
+        this.setCapabilityValue('measure_luminance', lightlevel).catch(this.error);
       } else if( sensor.type === 'ZLLTemperature' ) {
         if( typeof sensor.state.temperature !== 'number' )
           return this.setCapabilityValue('measure_temperature', null);
           
         const temperature = parseFloat(sensor.state.temperature) / 100;
-        this.setCapabilityValue('measure_temperature', temperature);
+        this.setCapabilityValue('measure_temperature', temperature).catch(this.error);
       }
     });
   }

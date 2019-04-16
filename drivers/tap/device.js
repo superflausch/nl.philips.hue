@@ -30,7 +30,9 @@ module.exports = class DeviceTap extends HueDevice {
         this.log(`Same button pressed [${device.state.buttonevent}]:`, button);
         
         if( button ) {        
-          this.driver.flowCardTriggerTapButtonPressed.trigger(this, {}, { button }).catch(this.error);
+          this.driver.flowCardTriggerTapButtonPressed
+            .trigger(this, {}, { button })
+            .catch(this.error);
         }
       }
 
@@ -43,7 +45,9 @@ module.exports = class DeviceTap extends HueDevice {
         this.log(`New button pressed [${device.state.buttonevent}]:`, button);
         
         if( button ) {
-          this.driver.flowCardTriggerTapButtonPressed.trigger(this, {}, { button }).catch(this.error);
+          this.driver.flowCardTriggerTapButtonPressed
+            .trigger(this, {}, { button })
+            .catch(this.error);
         }
       }
     }
