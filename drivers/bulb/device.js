@@ -16,6 +16,7 @@ module.exports = class DeviceBulb extends HueDevice {
   
   onHueInit() {
     const capabilities = this.getCapabilities();
+    this.log('Capabilities:', capabilities.join(', '));
     this.registerMultipleCapabilityListener(capabilities, this.onMultipleCapabilities.bind(this));
   }
   
@@ -65,25 +66,46 @@ module.exports = class DeviceBulb extends HueDevice {
     // Calculate capabilities  
     if( typeof valueObj.dim === 'number' ) {
       valueObj.onoff = valueObj.dim > 0;  
+    } else {
+      if( typeof valueObj.onoff === 'undefined' ) {
+        valueObj.onoff = true;
+      }
     }
-        
+    
+    // Calculate light mode
+    if( this.hasCapability('light_mode') ) {
+      if( !valueObj['light_mode'] ) {
+        if( typeof valueObj['light_hue'] === 'number'
+         || typeof valueObj['light_saturation'] === 'number' ) {
+          valueObj['light_mode'] = 'color';
+        } else if( typeof valueObj['light_temperature'] === 'number' ) {
+          valueObj['light_mode'] = 'temperature';
+        } else {
+          valueObj['light_mode'] = this.getCapabilityValue('light_mode');
+        }
+      }
+    }
+    
+    // Calculate values and set local state
     for( let capabilityId in CAPABILITIES_MAP ) {
       if( !this.hasCapability(capabilityId) ) continue;
       
       const propertyId = CAPABILITIES_MAP[capabilityId];
-      let capabilityValue = valueObj[capabilityId];
-      if( typeof capabilityValue === 'undefined' ) capabilityValue = this.getCapabilityValue(capabilityId);
-      let convertedValue = this.constructor.convert(capabilityId, 'set', capabilityValue);
+      const capabilityValue = ( typeof valueObj[capabilityId] !== 'undefined' )
+        ? valueObj[capabilityId] 
+        : this.getCapabilityValue(capabilityId);
       
-      // only send properties for the current light_mode, so the bulb switches accordingly
-      const lightMode = valueObj['light_mode'] || this.getCapabilityValue('light_mode');
-      if( lightMode === 'temperature' ) {
-        if( capabilityId === 'light_hue' || capabilityId === 'light_saturation' ) convertedValue = null;
-      } else if( lightMode === 'color' ) {
-        if( capabilityId === 'light_temperature' ) convertedValue = null;
-      }
-            
+      const convertedValue = this.constructor.convert(capabilityId, 'set', capabilityValue);
       if( convertedValue === null ) continue;
+      
+      // skip certain properties depending on mode
+      const lightMode = valueObj['light_mode'];
+      if( lightMode === 'temperature' ) {
+        if( capabilityId === 'light_hue' ) continue;
+        if( capabilityId === 'light_saturation' ) continue;
+      } else if( lightMode === 'color' ) {
+        if( capabilityId === 'light_temperature' ) continue;
+      }
       
       state[propertyId] = convertedValue;
       this.setCapabilityValue(capabilityId, capabilityValue).catch(this.error);
@@ -98,6 +120,9 @@ module.exports = class DeviceBulb extends HueDevice {
       }
     }
     
+    //this.log('State:', state);
+    
+    // Sync state to bulb
     return this.setLightState(state);
   }
   
