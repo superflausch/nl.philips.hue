@@ -18,7 +18,6 @@ const ICONS_MAP = {
 	'LCT002': 'LCT002',
 	'LCT003': 'LCT003',
 	'LCT012': 'LCT012',
-	'LST001': 'LST001',
 	'LLC001': 'LLC001',
 	'LLC010': 'LLC010',
 	'LLC011': 'LLC011',
@@ -36,11 +35,14 @@ const ICONS_MAP = {
 	'LLM011': DEFAULT_ICON,
 	'LLM012': DEFAULT_ICON,
 	'LLC020': 'LLC020',
-	'LST002': 'LST001',
 	'LTW012': 'LCT012',
 	'LCF005': 'LCF005',
 	'LCS001': 'LCS001',
 	'LCT024': 'LCT024',
+	'LST001': 'LST001',
+	'LST002': 'LST001',
+	'LST003': 'LST001',
+	'LWF001': 'LCF005', // TODO
 }
 
 module.exports = class DriverBulb extends HueDriver {
