@@ -42,7 +42,7 @@ const ICONS_MAP = {
 	'LST001': 'LST001',
 	'LST002': 'LST001',
 	'LST003': 'LST001',
-	'LWF001': 'LCF005', // TODO
+	'LWF001': 'LWF001',
 }
 
 module.exports = class DriverBulb extends HueDriver {
