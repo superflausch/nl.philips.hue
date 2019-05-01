@@ -2,7 +2,8 @@
   "$extends": "hue",
   "name": {
     "en": "Motion Sensor",
-    "nl": "Bewegingssensor"
+    "nl": "Bewegingssensor",
+    "de": "Bewegungssensor"
   },
   "class": "sensor",
   "capabilities": [

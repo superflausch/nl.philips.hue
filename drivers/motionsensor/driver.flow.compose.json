@@ -4,14 +4,16 @@
       "id": "enableMotionSensor",
       "title": {
         "en": "Enable sensor",
-        "nl": "Schakel sensor in"
+        "nl": "Schakel sensor in",
+        "de": "Sensor aktivieren"
       }
     },
     {
       "id": "disableMotionSensor",
       "title": {
         "en": "Disable sensor",
-        "nl": "Schakel sensor uit"
+        "nl": "Schakel sensor uit",
+        "de": "Sensor deaktivieren"
       }
     }
   ]

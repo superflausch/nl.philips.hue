@@ -8,7 +8,8 @@
     "en": "Philips Hue"
   },
   "description": {
-    "en": "Philips Hue for Homey"
+    "en": "Philips Hue for Homey",
+    "de": "Philips Hue für Homey"
   },
   "author": {
     "name": "Athom B.V."

@@ -4,21 +4,24 @@
       "id": "shortAlert",
       "title": {
         "en": "Blink the light (short)",
-        "nl": "Knipper de lamp (kort)"
+        "nl": "Knipper de lamp (kort)",
+        "de": "Das Licht blinken lassen (kurz)"
       }
     },
     {
       "id": "longAlert",
       "title": {
         "en": "Blink the light (long)",
-        "nl": "Knipper de lamp (lang)"
+        "nl": "Knipper de lamp (lang)",
+        "de": "Das Licht blinken lassen (lang)"
       }
     },
     {
       "id": "startColorLoop",
       "title": {
         "en": "Start colorloop effect",
-        "nl": "Begin kleur effect"
+        "nl": "Begin kleur effect",
+        "de": "Farbschleifen-Effekt starten"
       },
       "$filter": "capabilities=light_hue"
     },
@@ -26,7 +29,8 @@
       "id": "stopColorLoop",
       "title": {
         "en": "Stop colorloop effect",
-        "nl": "Stop kleur effect"
+        "nl": "Stop kleur effect",
+        "de": "Farbschleifen-Effekt anhalten"
       },
       "$filter": "capabilities=light_hue"
     }

@@ -1,7 +1,8 @@
 {
   "title": {
     "en": "Turn all lights off in a room",
-    "nl": "Zet alle lampen uit in een ruimte"
+    "nl": "Zet alle lampen uit in een ruimte",
+    "de": "Alle Lichter in einem Raum ausschalten"
   },
   "args": [
     {

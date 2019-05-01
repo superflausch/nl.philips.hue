@@ -4,7 +4,8 @@
       "id": "dimmerswitch_button_pressed",
       "title": {
         "en": "A button is pressed",
-        "nl": "Een knop is ingedrukt"
+        "nl": "Een knop is ingedrukt",
+        "de": "Eine Taste wird gedrückt"
       },
       "args": [
         {
@@ -22,21 +23,24 @@
               "id": "increase_brightness",
               "label": {
                 "en": "Increase brightness",
-                "nl": "Verhoog helderheid"
+                "nl": "Verhoog helderheid",
+                "de": "Helligkeit erhöhen"
               }
             },
             {
               "id": "decrease_brightness",
               "label": {
                 "en": "Decrease brightness",
-                "nl": "Verlaag helderheid"
+                "nl": "Verlaag helderheid",
+                "de": "Helligkeit verringern"
               }
             },
             {
               "id": "off",
               "label": {
                 "en": "Off",
-                "nl": "Uit"
+                "nl": "Uit",
+                "de": "Aus"
               }
             }
           ]

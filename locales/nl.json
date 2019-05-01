@@ -9,6 +9,7 @@
 			"description": "Druk op de knop van je Philips Hue bridge"
 		}
 	},
+	"loading": "Zoeken naar de Hue Bridge...",
 	"no_bridges": "Geen bridges verbonden",
 	"unreachable": "Onbereikbaar",
 	"all_lights": "Alle lampen"

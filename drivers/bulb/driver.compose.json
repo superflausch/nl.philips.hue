@@ -2,7 +2,8 @@
   "$extends": "hue",
   "name": {
     "en": "Light",
-    "nl": "Lamp"
+    "nl": "Lamp",
+    "de": "Licht"
   },
   "class": "light",
   "capabilities": [
