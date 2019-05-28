@@ -16,26 +16,31 @@ module.exports = class DeviceDimmerSwitch extends HueDevice {
     super.onPoll(...arguments);
     if(!device.state) return;
     if(!device.config) return;
-        
+		
+		const battery = parseInt(device.config.battery);
+		if( typeof battery === 'number')
+  		this.setCapabilityValue('measure_battery', battery).catch(this.error);
+      
     // Use only the first digit, it's mapped to the button
     // The fourth digit seems to be some type of event
-    if( typeof device.state.buttonevent !== 'undefined' )
-      device.state.buttonevent = String(device.state.buttonevent).substring(0,1);
-		
-		this.setCapabilityValue('measure_battery', parseInt(device.config.battery)).catch(this.error);
-        
+    let lastupdated = device.state.lastupdated;
+    let buttonevent = device.state.buttonevent;
+    
+    if( typeof buttonevent !== 'undefined' )
+      buttonevent = String(buttonevent).substring(0,1);
+            
     // Initial load, don't trigger a Flow when the app has just started
     if( typeof this.buttonevent === 'undefined' ) {
-      this.buttonevent = device.state.buttonevent;
-      this.lastupdated = device.state.lastupdated;
+      this.buttonevent = buttonevent;
+      this.lastupdated = lastupdated;
     } else {
 
       // if last press changed and button is the same
-      if( device.state.lastupdated !== this.lastupdated && device.state.buttonevent === this.buttonevent ) {
-        this.lastupdated = device.state.lastupdated;
+      if( lastupdated !== this.lastupdated && buttonevent === this.buttonevent ) {
+        this.lastupdated = lastupdated;
         
-        const button = BUTTON_EVENT_MAP[device.state.buttonevent];
-        this.log(`Same button pressed [${device.state.buttonevent}]:`, button);
+        const button = BUTTON_EVENT_MAP[buttonevent];
+        this.log(`Same button pressed [${buttonevent}]:`, button);
         
         if( button ) {
           this.driver.flowCardTriggerDimmerSwitchButtonPressed
@@ -45,12 +50,12 @@ module.exports = class DeviceDimmerSwitch extends HueDevice {
       }
 
       // else if the button has changed
-      else if( this.buttonevent !== device.state.buttonevent ) {
-        this.buttonevent = device.state.buttonevent;
-        this.lastupdated = device.state.lastupdated;
+      else if( this.buttonevent !== buttonevent ) {
+        this.buttonevent = buttonevent;
+        this.lastupdated = lastupdated;
         
-        const button = BUTTON_EVENT_MAP[device.state.buttonevent];
-        this.log(`New button pressed [${device.state.buttonevent}]:`, button);
+        const button = BUTTON_EVENT_MAP[buttonevent];
+        this.log(`New button pressed [${buttonevent}]:`, button);
         
         if( button ) {
           this.driver.flowCardTriggerDimmerSwitchButtonPressed
@@ -59,6 +64,11 @@ module.exports = class DeviceDimmerSwitch extends HueDevice {
         }
       }
     }
+    
+    // cleanup
+    device = null;
+    buttonevent = null;
+    lastupdated = null;
   }
   
 }

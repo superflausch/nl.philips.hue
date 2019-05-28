@@ -51,6 +51,9 @@ module.exports = class DeviceTap extends HueDevice {
         }
       }
     }
+    
+    // cleanup
+    device = null;
   }
   
 }

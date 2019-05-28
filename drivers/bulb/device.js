@@ -36,6 +36,9 @@ module.exports = class DeviceBulb extends HueDevice {
         this.error(`Error setting capability ${capabilityId} to value ${convertedValue} (${propertyValue})`);
       });
     }
+    
+    // cleanup
+    device = null;
   }
   
   onRenamed(name) {

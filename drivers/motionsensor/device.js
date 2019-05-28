@@ -40,6 +40,10 @@ module.exports = class DeviceMotionSensor extends HueDevice {
         this.setCapabilityValue('measure_temperature', temperature).catch(this.error);
       }
     });
+    
+    // cleanup
+    device = null;
+    state = null;
   }
   
   async enableMotionSensor() {
