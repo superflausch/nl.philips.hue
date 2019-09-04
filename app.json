@@ -1,6 +1,6 @@
 {
   "id": "nl.philips.hue",
-  "version": "4.0.11",
+  "version": "4.1.0",
   "brandColor": "#F4AF2E",
   "compatibility": ">=2.1.0",
   "sdk": 2,
@@ -416,6 +416,11 @@
       "capabilities": [
         "measure_battery"
       ],
+      "energy": {
+        "batteries": [
+          "CR2450"
+        ]
+      },
       "id": "dimmerswitch"
     },
     {
@@ -468,6 +473,12 @@
         "measure_luminance",
         "measure_battery"
       ],
+      "energy": {
+        "batteries": [
+          "AAA",
+          "AAA"
+        ]
+      },
       "id": "motionsensor"
     },
     {

@@ -18,6 +18,12 @@ module.exports = class DeviceBulb extends HueDevice {
     const capabilities = this.getCapabilities();
     this.log('Capabilities:', capabilities.join(', '));
     this.registerMultipleCapabilityListener(capabilities, this.onMultipleCapabilities.bind(this));
+    
+    let energy = this.getEnergy();
+    if( !energy ) {
+      energy = this.driver.getEnergy(this.device.modelid);
+      this.setEnergy(energy).catch(this.error);
+    }
   }
   
   onPoll({ device }) {   
