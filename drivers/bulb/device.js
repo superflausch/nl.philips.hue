@@ -18,6 +18,14 @@ module.exports = class DeviceBulb extends HueDevice {
     const capabilities = this.getCapabilities();
     this.log('Capabilities:', capabilities.join(', '));
     this.registerMultipleCapabilityListener(capabilities, this.onMultipleCapabilities.bind(this));
+    
+    if( typeof this.getEnergy === 'function' ) {
+      let energy = this.getEnergy();
+      if( !energy ) {
+        energy = this.driver.getEnergy(this.device.modelid);
+        this.setEnergy(energy).catch(this.error);
+      }
+    }
   }
   
   onPoll({ device }) {   
@@ -99,7 +107,7 @@ module.exports = class DeviceBulb extends HueDevice {
         : this.getCapabilityValue(capabilityId);
       
       const convertedValue = this.constructor.convert(capabilityId, 'set', capabilityValue);
-      if( convertedValue === null ) continue;
+      if( convertedValue === null ||  isNaN(convertedValue) === true) continue;
       
       // skip certain properties depending on mode
       const lightMode = valueObj['light_mode'];

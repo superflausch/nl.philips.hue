@@ -15,9 +15,10 @@ const CAPABILITIES_MAP = {
 }
 const ICONS_MAP = {
 	'LCT001': 'LCT001',
-	'LCT007': 'LCT001',
 	'LCT002': 'LCT002',
 	'LCT003': 'LCT003',
+	'LCT007': 'LCT001',
+	'LCT011': 'LCT002',
 	'LCT012': 'LCT012',
 	'LLC001': 'LLC001',
 	'LLC010': 'LLC010',
@@ -44,7 +45,40 @@ const ICONS_MAP = {
 	'LST002': 'LST001',
 	'LST003': 'LST001',
 	'LWF001': 'LWF001',
-	'Plug 01': 'socket',
+	'LTW001': 'LCT001',
+	'LTW004': 'LCT001',
+	'LTW010': 'LCT001',
+	'LTW011': 'LCT001',
+	'LTW012': 'LCT012',
+	'LTW015': 'LCT001',
+	'LTW013': 'LCT003',
+  'Plug 01': 'socket',
+};
+
+const ENERGY_MAP = {
+  'LCT001': { approximation: { usageOff: 0.5, usageOn: 8.5, }, },
+  'LCT002': { approximation: { usageOff: 0.5, usageOn: 8.0, }, },
+  'LCT003': { approximation: { usageOff: 0.5, usageOn: 6.5, }, },
+  'LCT007': { approximation: { usageOff: 0.5, usageOn: 9.0, }, },
+  'LCT010': { approximation: { usageOff: 0.5, usageOn: 10.0, }, },
+  'LCT011': { approximation: { usageOff: 0.5, usageOn: 9.0, }, },
+  'LCT012': { approximation: { usageOff: 0.5, usageOn: 6.5, }, },
+  'LCT015': { approximation: { usageOff: 0.5, usageOn: 9.5, }, },
+  'LTW001': { approximation: { usageOff: 0.5, usageOn: 9.5, }, },
+  'LTW004': { approximation: { usageOff: 0.5, usageOn: 9.5, }, },
+  'LTW010': { approximation: { usageOff: 0.5, usageOn: 9.5, }, },
+  'LTW011': { approximation: { usageOff: 0.5, usageOn: 9.5, }, },
+  'LTW012': { approximation: { usageOff: 0.5, usageOn: 9.5, }, },
+  'LTW013': { approximation: { usageOff: 0.5, usageOn: 9.5, }, },
+  'LTW015': { approximation: { usageOff: 0.5, usageOn: 9.5, }, },
+  'LWB004': { approximation: { usageOff: 0.5, usageOn: 9.0, }, },
+  'LWB007': { approximation: { usageOff: 0.5, usageOn: 9.0, }, },
+  'LWB006': { approximation: { usageOff: 0.5, usageOn: 9.5, }, },
+  'LWB010': { approximation: { usageOff: 0.5, usageOn: 9.5, }, },
+  'LWB014': { approximation: { usageOff: 0.5, usageOn: 9.5, }, },
+  'LST001': { approximation: { usageOff: 0.5, usageOn: 20.0, }, },
+  'LST002': { approximation: { usageOff: 0.5, usageOn: 20.0, }, },
+  'LST003': { approximation: { usageOff: 0.5, usageOn: 37.5, }, },
 }
 
 module.exports = class DriverBulb extends HueDriver {
@@ -89,5 +123,9 @@ module.exports = class DriverBulb extends HueDriver {
 		new Homey.FlowCardAction('stopColorLoop')
 			.register()
 			.registerRunListener( args => args.device.stopColorLoop() );
+  }
+  
+  getEnergy(modelId) {
+    return ENERGY_MAP[modelId] || null;
   }
 }

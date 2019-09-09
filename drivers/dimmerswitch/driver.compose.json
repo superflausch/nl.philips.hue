@@ -6,5 +6,8 @@
     "de": "Dimmschalter"
   },
   "class": "sensor",
-  "capabilities": [ "measure_battery" ]
+  "capabilities": [ "measure_battery" ],
+  "energy": {
+    "batteries": [ "CR2450" ]
+  }
 }
