@@ -5,6 +5,7 @@ const HueDriver = require('../../lib/HueDriver.js');
 
 const PLUG_MODEL_IDS = [
   'LOM001',
+  'Plug 01',
 ];
 
 module.exports = class DriverBulb extends HueDriver {
