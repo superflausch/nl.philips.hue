@@ -21,7 +21,7 @@ module.exports = class DriverBulb extends HueDriver {
   static onPairListDevice({ bridge, device }) {
     bridge.log('Plug Device:', device.modelid, device.name);
     
-    if( !PLUG_MODEL_IDS.includes(device.modelid)) return null;
+    if( device.type !== 'On/Off plug-in unit' ) return null;
     return {};
   }
 }

@@ -81,11 +81,6 @@ const ENERGY_MAP = {
   'LST003': { approximation: { usageOff: 0.5, usageOn: 37.5, }, },
 };
 
-const PLUG_MODEL_IDS = [
-  'LOM001',
-  'Plug 01',
-];
-
 module.exports = class DriverBulb extends HueDriver {
   
   static get HUE_TYPE() {
@@ -97,7 +92,7 @@ module.exports = class DriverBulb extends HueDriver {
   }
   
   static onPairListDevice({ bridge, device }) {
-    if( PLUG_MODEL_IDS.includes(device.modelid)) return null; // Exclude Hue Plug
+    if( device.type === 'On/Off plug-in unit' ) return null;
     
     const obj = {};
     
