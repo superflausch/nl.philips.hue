@@ -79,7 +79,11 @@ const ENERGY_MAP = {
   'LST001': { approximation: { usageOff: 0.5, usageOn: 20.0, }, },
   'LST002': { approximation: { usageOff: 0.5, usageOn: 20.0, }, },
   'LST003': { approximation: { usageOff: 0.5, usageOn: 37.5, }, },
-}
+};
+
+const PLUG_MODEL_IDS = [
+  'LOM001',
+];
 
 module.exports = class DriverBulb extends HueDriver {
   
@@ -92,6 +96,8 @@ module.exports = class DriverBulb extends HueDriver {
   }
   
   static onPairListDevice({ bridge, device }) {
+    if( PLUG_MODEL_IDS.includes(device.modelid)) return null; // Exclude Hue Plug
+    
     const obj = {};
     
     const type = device.type.toLowerCase();

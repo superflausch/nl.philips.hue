@@ -1,6 +1,6 @@
 {
   "id": "nl.philips.hue",
-  "version": "4.1.1",
+  "version": "4.2.0",
   "brandColor": "#F4AF2E",
   "compatibility": ">=2.1.0",
   "sdk": 2,
@@ -483,8 +483,8 @@
     },
     {
       "images": {
-        "large": "/drivers/socket/assets/images/large.jpg",
-        "small": "/drivers/socket/assets/images/small.jpg"
+        "large": "/drivers/plug/assets/images/large.jpg",
+        "small": "/drivers/plug/assets/images/small.jpg"
       },
       "pair": [
         {
@@ -520,23 +520,13 @@
         }
       ],
       "name": {
-        "en": "Socket",
-        "nl": "Stekker",
-        "de": "Stecker"
+        "en": "Plug"
       },
       "class": "socket",
       "capabilities": [
-        "onoff",
-        "dim"
+        "onoff"
       ],
-      "capabilitiesOptions": {
-        "dim": {
-          "opts": {
-            "duration": true
-          }
-        }
-      },
-      "id": "socket"
+      "id": "plug"
     },
     {
       "images": {

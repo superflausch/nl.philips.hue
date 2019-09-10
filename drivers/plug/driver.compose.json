@@ -1,0 +1,10 @@
+{
+  "$extends": "hue",
+  "name": {
+    "en": "Plug"
+  },
+  "class": "socket",
+  "capabilities": [
+    "onoff"
+  ]
+}
