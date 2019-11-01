@@ -79,6 +79,9 @@ const ENERGY_MAP = {
   'LST001': { approximation: { usageOff: 0.5, usageOn: 20.0, }, },
   'LST002': { approximation: { usageOff: 0.5, usageOn: 20.0, }, },
   'LST003': { approximation: { usageOff: 0.5, usageOn: 37.5, }, },
+  'LLC010': { approximation: { usageOff: 0.5, usageOn: 7.5, }, },
+  'LLC011': { approximation: { usageOff: 0.5, usageOn: 7.5, }, },
+  'LLC012': { approximation: { usageOff: 0.5, usageOn: 7.5, }, },
 };
 
 module.exports = class DriverBulb extends HueDriver {
