@@ -1,0 +1,10 @@
+{
+  "$extends": "hue",
+  "name": {
+    "en": "Friends of Hue Switch",
+    "nl": "Friends of Hue Switch",
+    "de": "Friends of Hue Schalter"
+  },
+  "class": "sensor",
+  "capabilities": []
+}

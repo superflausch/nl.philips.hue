@@ -1,0 +1,196 @@
+{
+  "triggers": [
+    {
+      "id": "fohswitch_button_short_pressed",
+      "title": {
+        "en": "A button is pressed briefly",
+        "nl": "Een knop is kort ingedrukt",
+        "de": "Eine Taste wird kurz gedrückt"
+      },
+      "args": [
+        {
+          "name": "button",
+          "type": "dropdown",
+          "values": [
+            {
+              "id": "top_left",
+              "label": {
+                "en": "Top Left",
+                "nl": "Linksboven",
+                "de": "Oben Links"
+              }
+            },
+            {
+              "id": "bottom_left",
+              "label": {
+                "en": "Bottom Left",
+                "nl": "Linksonder",
+                "de": "Unten Links"
+              }
+            },
+            {
+              "id": "bottom_right",
+              "label": {
+                "en": "Bottom Right",
+                "nl": "Rechtssonder",
+                "de": "Unten Rechts"
+              }
+            },
+            {
+              "id": "top_right",
+              "label": {
+                "en": "Top Right",
+                "nl": "Rechtsboven",
+                "de": "Oben Rechts"
+              }
+            },
+            {
+              "id": "bottom_left_right",
+              "label": {
+                "en": "Bottom (Left & Right)",
+                "nl": "Onder (links en rechts)",
+                "de": "Unten (Links & Rechts)"
+              }
+            },
+            {
+              "id": "top_left_right",
+              "label": {
+                "en": "Top (Left & Right)",
+                "nl": "Boven (links en rechts)",
+                "de": "Oben (Links & Rechts)"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "fohswitch_button_long_pressed",
+      "title": {
+        "en": "A button is pressed for a long time",
+        "nl": "Er wordt lang op een toets gedrukt",
+        "de": "Eine Taste wird lange gedrückt"
+      },
+      "args": [
+        {
+          "name": "button",
+          "type": "dropdown",
+          "values": [
+            {
+              "id": "top_left",
+              "label": {
+                "en": "Top Left",
+                "nl": "Linksboven",
+                "de": "Oben Links"
+              }
+            },
+            {
+              "id": "bottom_left",
+              "label": {
+                "en": "Bottom Left",
+                "nl": "Linksonder",
+                "de": "Unten Links"
+              }
+            },
+            {
+              "id": "bottom_right",
+              "label": {
+                "en": "Bottom Right",
+                "nl": "Rechtssonder",
+                "de": "Unten Rechts"
+              }
+            },
+            {
+              "id": "top_right",
+              "label": {
+                "en": "Top Right",
+                "nl": "Rechtsboven",
+                "de": "Oben Rechts"
+              }
+            },
+            {
+              "id": "bottom_left_right",
+              "label": {
+                "en": "Bottom (Left & Right)",
+                "nl": "Onder (links en rechts)",
+                "de": "Unten (Links & Rechts)"
+              }
+            },
+            {
+              "id": "top_left_right",
+              "label": {
+                "en": "Top (Left & Right)",
+                "nl": "Boven (links en rechts)",
+                "de": "Oben (Links & Rechts)"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "fohswitch_button_long_released",
+      "title": {
+        "en": "A button is released after a long press (7 seconds max.)",
+        "nl": "Een toets wordt losgelaten na lang indrukken (maximaal 7 seconden)",
+        "de": "Eine Taste wird nach langem drücken losgelassen (7 sec max.)"
+      },
+      "args": [
+        {
+          "name": "button",
+          "type": "dropdown",
+          "values": [
+            {
+              "id": "top_left",
+              "label": {
+                "en": "Top Left",
+                "nl": "Linksboven",
+                "de": "Oben Links"
+              }
+            },
+            {
+              "id": "bottom_left",
+              "label": {
+                "en": "Bottom Left",
+                "nl": "Linksonder",
+                "de": "Unten Links"
+              }
+            },
+            {
+              "id": "bottom_right",
+              "label": {
+                "en": "Bottom Right",
+                "nl": "Rechtssonder",
+                "de": "Unten Rechts"
+              }
+            },
+            {
+              "id": "top_right",
+              "label": {
+                "en": "Top Right",
+                "nl": "Rechtsboven",
+                "de": "Oben Rechts"
+              }
+            },
+            {
+              "id": "bottom_left_right",
+              "label": {
+                "en": "Bottom (Left & Right)",
+                "nl": "Onder (links en rechts)",
+                "de": "Unten (Links & Rechts)"
+              }
+            },
+            {
+              "id": "top_left_right",
+              "label": {
+                "en": "Top (Left & Right)",
+                "nl": "Boven (links en rechts)",
+                "de": "Oben (Links & Rechts)"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
